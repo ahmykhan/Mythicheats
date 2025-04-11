@@ -14,6 +14,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManageCourses from "./pages/admin/ManageCourses";
 import ManageNotifications from "./pages/admin/ManageNotifications";
 import AdminSettings from "./pages/admin/AdminSettings";
+import CourseFiles from "./pages/admin/CourseFiles";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => (
         <Route path="/admin/courses" element={<ManageCourses />} />
         <Route path="/admin/notifications" element={<ManageNotifications />} />
         <Route path="/admin/settings" element={<AdminSettings />} />
+        <Route path="/admin/files" element={<CourseFiles />} />
         
         <Route path="*" element={<NotFound />} />
       </Routes>
