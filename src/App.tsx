@@ -10,6 +10,12 @@ import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
 import Notifications from "./pages/Notifications";
 
+// Admin pages
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import ManageCourses from "./pages/admin/ManageCourses";
+import ManageNotifications from "./pages/admin/ManageNotifications";
+import AdminSettings from "./pages/admin/AdminSettings";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -24,6 +30,13 @@ const App = () => (
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/notifications" element={<Notifications />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/courses" element={<ManageCourses />} />
+          <Route path="/admin/notifications" element={<ManageNotifications />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
+          
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
