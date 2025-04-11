@@ -69,13 +69,15 @@ const courseSchema = z.object({
   isLocked: z.boolean().default(false),
 });
 
+type CourseFormValues = z.infer<typeof courseSchema>;
+
 const ManageCourses = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [courses, setCourses] = useState<Course[]>(sampleCourses);
   const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof courseSchema>>({
+  const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
       title: "",
@@ -99,7 +101,7 @@ const ManageCourses = () => {
     setIsOpen(true);
   };
 
-  const onSubmit = (values: z.infer<typeof courseSchema>) => {
+  const onSubmit = (values: CourseFormValues) => {
     if (editingCourse) {
       // Update existing course
       setCourses(
@@ -114,10 +116,13 @@ const ManageCourses = () => {
         description: "The course has been successfully updated.",
       });
     } else {
-      // Create new course
-      const newCourse = {
+      // Create new course with all required fields
+      const newCourse: Course = {
         id: Math.max(0, ...courses.map((c) => c.id)) + 1,
-        ...values,
+        title: values.title,
+        description: values.description,
+        filesCount: values.filesCount,
+        isLocked: values.isLocked,
       };
       setCourses([...courses, newCourse]);
       toast({
