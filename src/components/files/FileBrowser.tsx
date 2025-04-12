@@ -14,8 +14,21 @@ import {
   FileCheck
 } from "lucide-react";
 
-// Sample data - in a real application, this would come from an API
-const sampleFiles = {
+// Define types first
+type FileType = {
+  type: "file";
+  fileType: string;
+};
+
+type FolderType = {
+  type: "folder";
+  children: Record<string, FileOrFolder>;
+};
+
+type FileOrFolder = FileType | FolderType;
+
+// Updated sample data structure to match the types
+const sampleFiles: Record<string, FileOrFolder> = {
   "Courses": {
     type: "folder",
     children: {
@@ -106,18 +119,6 @@ const sampleFiles = {
   }
 };
 
-type FileType = {
-  type: "file";
-  fileType: string;
-};
-
-type FolderType = {
-  type: "folder";
-  children: Record<string, FileType | FolderType>;
-};
-
-type FileOrFolder = FileType | FolderType;
-
 interface FileBrowserProps {
   path: string[];
   onFolderClick: (folder: string) => void;
@@ -135,10 +136,16 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
 }) => {
   // Function to get the current folder's contents based on the path
   const getCurrentFolder = (path: string[]): FolderType | null => {
-    let current: FileOrFolder = sampleFiles;
+    let current: FileOrFolder | undefined = sampleFiles[path[0]];
     
-    for (const folder of path) {
-      if (current.type === "folder" && current.children && current.children[folder]) {
+    if (!current || current.type !== "folder") {
+      return null;
+    }
+    
+    // Skip first path segment as we've already processed it
+    for (let i = 1; i < path.length; i++) {
+      const folder = path[i];
+      if (current.type === "folder" && current.children[folder] && current.children[folder].type === "folder") {
         current = current.children[folder];
       } else {
         return null;
