@@ -23,7 +23,7 @@ type FileItem = {
   name: string;
   type: "file";
   fileType: string;
-  webViewLink?: string;
+  webViewLink: string;
 };
 
 type FolderItem = {
@@ -43,94 +43,176 @@ interface FileBrowserProps {
   currentFolderId: string;
 }
 
-// Sample data to use when API access is restricted
-const sampleFiles: FileOrFolderItem[] = [
-  {
-    id: "folder1",
-    name: "Assignments",
-    type: "folder"
-  },
-  {
-    id: "folder2",
-    name: "Notes",
-    type: "folder"
-  },
-  {
-    id: "folder3",
-    name: "Past Papers",
-    type: "folder"
-  },
-  {
-    id: "file1",
-    name: "Physics Assignment 1.pdf",
-    type: "file",
-    fileType: "pdf",
-    webViewLink: "https://drive.google.com/file/d/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e/view"
-  },
-  {
-    id: "file2",
-    name: "Chemistry Notes.docx",
-    type: "file",
-    fileType: "doc",
-    webViewLink: "https://drive.google.com/drive/folders/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e"
-  },
-  {
-    id: "file3",
-    name: "Math Past Paper 2024.pdf",
-    type: "file",
-    fileType: "pdf",
-    webViewLink: "https://drive.google.com/drive/folders/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e"
-  }
-];
-
-// Folder mapping to simulate navigation
-const folderContents: Record<string, FileOrFolderItem[]> = {
-  "folder1": [
+// Full folder structure with mock data
+const folderStructure: Record<string, FileOrFolderItem[]> = {
+  "root": [
     {
-      id: "file4",
-      name: "Assignment 1.pdf",
+      id: "folder1",
+      name: "CS Assignments",
+      type: "folder"
+    },
+    {
+      id: "folder2",
+      name: "Study Notes",
+      type: "folder"
+    },
+    {
+      id: "folder3",
+      name: "Past Exams",
+      type: "folder"
+    },
+    {
+      id: "file1",
+      name: "Course Syllabus.pdf",
       type: "file",
       fileType: "pdf",
-      webViewLink: "https://drive.google.com/drive/folders/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e"
+      webViewLink: "https://drive.google.com/file/d/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e/view?usp=sharing"
+    },
+    {
+      id: "file2",
+      name: "Academic Calendar.docx",
+      type: "file",
+      fileType: "doc",
+      webViewLink: "https://drive.google.com/file/d/1XdY62HoZkHUt6JTV3L8Ox9yCveUMM-F1/view?usp=sharing"
+    }
+  ],
+  "folder1": [
+    {
+      id: "folder1-1",
+      name: "Programming Assignments",
+      type: "folder"
+    },
+    {
+      id: "folder1-2",
+      name: "Theory Assignments",
+      type: "folder"
+    },
+    {
+      id: "file3",
+      name: "Assignment Rubric.pdf",
+      type: "file",
+      fileType: "pdf",
+      webViewLink: "https://drive.google.com/file/d/1vEsD6mJGT8LbF2P_r3v1QKpLtmAT_45z/view?usp=sharing"
+    }
+  ],
+  "folder1-1": [
+    {
+      id: "file4",
+      name: "Java Project.zip",
+      type: "file",
+      fileType: "zip",
+      webViewLink: "https://drive.google.com/file/d/1ZO2fj9KxCGvPtVUyl3Pxm4EKWlUju56t/view?usp=sharing"
     },
     {
       id: "file5",
-      name: "Assignment 2.docx",
+      name: "Python Challenge.py",
+      type: "file",
+      fileType: "code",
+      webViewLink: "https://drive.google.com/file/d/1n5lSosX1SeMDc_W9bInTJ7xVL6sm2qHp/view?usp=sharing"
+    }
+  ],
+  "folder1-2": [
+    {
+      id: "file6",
+      name: "Algorithm Analysis.pdf",
+      type: "file",
+      fileType: "pdf",
+      webViewLink: "https://drive.google.com/file/d/1E8JRqVyzbwR9qfHxDjgD3lAEpfTeMnZx/view?usp=sharing"
+    },
+    {
+      id: "file7",
+      name: "Database Theory.docx",
       type: "file",
       fileType: "doc",
-      webViewLink: "https://drive.google.com/drive/folders/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e"
+      webViewLink: "https://drive.google.com/file/d/1sT9Tx4GwNuJMQkK0uIF1Wm_C8OZ2LOE8/view?usp=sharing"
     }
   ],
   "folder2": [
     {
-      id: "file6",
-      name: "Chapter 1 Notes.pdf",
-      type: "file",
-      fileType: "pdf",
-      webViewLink: "https://drive.google.com/drive/folders/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e"
+      id: "folder2-1",
+      name: "First Semester",
+      type: "folder"
     },
     {
-      id: "file7",
-      name: "Chapter 2 Notes.pdf",
+      id: "folder2-2",
+      name: "Second Semester",
+      type: "folder"
+    }
+  ],
+  "folder2-1": [
+    {
+      id: "file8",
+      name: "Introduction to Computer Science.pdf",
       type: "file",
       fileType: "pdf",
-      webViewLink: "https://drive.google.com/drive/folders/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e"
+      webViewLink: "https://drive.google.com/file/d/1JpUVRIqdHGglOlaIzABG-BJRZSrF4tx7/view?usp=sharing"
+    },
+    {
+      id: "file9",
+      name: "Linear Algebra Notes.pdf",
+      type: "file",
+      fileType: "pdf",
+      webViewLink: "https://drive.google.com/file/d/1PKRHDguzXp5uL6_BAGw2v4eA0k8IT-B3/view?usp=sharing"
+    }
+  ],
+  "folder2-2": [
+    {
+      id: "file10",
+      name: "Advanced Algorithms.pdf",
+      type: "file",
+      fileType: "pdf",
+      webViewLink: "https://drive.google.com/file/d/1mH0iCj3Hd4EqrGcyJ-tBRzp1Og3K5QIU/view?usp=sharing"
+    },
+    {
+      id: "file11",
+      name: "Object Oriented Programming.pdf",
+      type: "file",
+      fileType: "pdf",
+      webViewLink: "https://drive.google.com/file/d/1D5rZ3XS4UAiVVXjy7HTXnX93mPNE1J70/view?usp=sharing"
     }
   ],
   "folder3": [
     {
-      id: "file8",
-      name: "2023 Exam Paper.pdf",
-      type: "file",
-      fileType: "pdf",
-      webViewLink: "https://drive.google.com/drive/folders/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e"
+      id: "folder3-1",
+      name: "Midterm Exams",
+      type: "folder"
     },
     {
-      id: "file9",
-      name: "2022 Exam Paper.pdf",
+      id: "folder3-2",
+      name: "Final Exams",
+      type: "folder"
+    }
+  ],
+  "folder3-1": [
+    {
+      id: "file12",
+      name: "Midterm 2023.pdf",
       type: "file",
       fileType: "pdf",
-      webViewLink: "https://drive.google.com/drive/folders/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e"
+      webViewLink: "https://drive.google.com/file/d/1wMfS0RMKhc4qZBTqoYVBsbnx8HjyEZDw/view?usp=sharing"
+    },
+    {
+      id: "file13",
+      name: "Midterm 2022.pdf",
+      type: "file",
+      fileType: "pdf",
+      webViewLink: "https://drive.google.com/file/d/1vYJXx4EAe0aTZ4_cqw4CLz9Ko2pj-5XQ/view?usp=sharing"
+    }
+  ],
+  "folder3-2": [
+    {
+      id: "file14",
+      name: "Final Exam 2023.pdf",
+      type: "file",
+      fileType: "pdf",
+      webViewLink: "https://drive.google.com/file/d/1Q4l2P2p_GhsNk4zAwzpfiJUJSVD4eH9U/view?usp=sharing"
+    },
+    {
+      id: "file15",
+      name: "Final Exam 2022.pdf",
+      type: "file",
+      fileType: "pdf",
+      webViewLink: "https://drive.google.com/file/d/1-sQl9scWl-Fiz5MywqZ8UKI-dMvDKcsC/view?usp=sharing"
     }
   ]
 };
@@ -159,22 +241,21 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
         await new Promise(resolve => setTimeout(resolve, 500));
         
         // Get files based on the current folder ID
-        let fetchedFiles = currentFolderId === "root" || currentFolderId === "1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e"
-          ? sampleFiles
-          : folderContents[currentFolderId] || [];
+        let fetchedFiles = folderStructure[currentFolderId] || [];
         
-        setFiles(fetchedFiles);
+        if (fetchedFiles.length === 0 && currentFolderId !== "root") {
+          setError("Folder not found or empty");
+        } else {
+          setFiles(fetchedFiles);
+        }
       } catch (error) {
         console.error("Error fetching files:", error);
         setError("Could not access files. Using your provided Google Drive link directly.");
         toast({
           title: "Info",
-          description: "Direct API access is restricted. Opening folder link in new tab.",
+          description: "Unable to access files. Please try again.",
           variant: "default",
         });
-        
-        // Automatically open the shared folder link
-        window.open("https://drive.google.com/drive/folders/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e", "_blank");
       } finally {
         setLoading(false);
       }
@@ -246,7 +327,8 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
     }
   };
 
-  const handleOpenDriveLink = () => {
+  // Open the main Google Drive folder
+  const handleOpenMainDriveLink = () => {
     window.open("https://drive.google.com/drive/folders/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e", "_blank");
   };
 
@@ -265,7 +347,7 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
         <Button 
           variant="outline" 
           className="mt-4"
-          onClick={handleOpenDriveLink}
+          onClick={handleOpenMainDriveLink}
         >
           <ExternalLink className="h-4 w-4 mr-2" />
           Open in Google Drive
@@ -290,7 +372,7 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
         
         <Button 
           variant="outline" 
-          onClick={handleOpenDriveLink} 
+          onClick={handleOpenMainDriveLink} 
           className="mb-4 ml-auto"
         >
           <ExternalLink className="h-4 w-4 mr-2" />
@@ -307,7 +389,7 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
               onClick={() => {
                 if (item.type === "folder") {
                   onFolderClick(item.name, item.id);
-                } else if ('webViewLink' in item && item.webViewLink) {
+                } else if ('webViewLink' in item) {
                   window.open(item.webViewLink, "_blank");
                 }
               }}

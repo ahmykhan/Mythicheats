@@ -43,7 +43,7 @@ const CourseFiles = () => {
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPath, setCurrentPath] = useState<PathItem[]>([
-    { name: "My Drive", id: "root" }
+    { name: "My School Drive", id: "root" }
   ]);
   const [activeTab, setActiveTab] = useState<string>("all");
 
