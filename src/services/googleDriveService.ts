@@ -6,6 +6,7 @@ const CLIENT_ID = "679596751279-dj0o27k9s3f7je7ol71kimo84al4h39v.apps.googleuser
 const API_KEY = "AIzaSyCcAYHG73Z-Jq30WFOf7zVuEdgl4eZFNLk"; // Google API key
 const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
 const SCOPES = "https://www.googleapis.com/auth/drive.readonly";
+const SHARED_FOLDER_ID = "1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e"; // ID of the shared folder
 
 // Types for Google Drive files and folders
 export type GoogleDriveFile = {
@@ -102,7 +103,7 @@ export const authenticateWithGoogleDrive = (): Promise<void> => {
 };
 
 // List files in a folder
-export const listFiles = async (folderId: string = "root"): Promise<GoogleDriveFile[]> => {
+export const listFiles = async (folderId: string = SHARED_FOLDER_ID): Promise<GoogleDriveFile[]> => {
   if (!gapi) throw new Error("Google API not initialized");
   
   try {

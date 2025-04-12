@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink } from "@/components/ui/breadcrumb";
@@ -44,10 +43,11 @@ const CourseFiles = () => {
   const [driveConnected, setDriveConnected] = useState(false);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPath, setCurrentPath] = useState<PathItem[]>([{ name: "My Drive", id: "root" }]);
+  const [currentPath, setCurrentPath] = useState<PathItem[]>([
+    { name: "My Drive", id: "1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e" }
+  ]);
   const [activeTab, setActiveTab] = useState<string>("all");
 
-  // Check if Google Drive is connected on component mount
   useEffect(() => {
     const checkDriveConnection = async () => {
       try {
@@ -61,7 +61,6 @@ const CourseFiles = () => {
     checkDriveConnection();
   }, []);
 
-  // Handle successful Google Drive authentication
   const handleAuthSuccess = () => {
     setDriveConnected(true);
     toast({
@@ -70,7 +69,6 @@ const CourseFiles = () => {
     });
   };
 
-  // Handle folder creation or file upload
   const handleCreateItem = () => {
     if (!newItemName.trim()) {
       toast({
@@ -87,10 +85,6 @@ const CourseFiles = () => {
       description: `Creating ${itemType} "${newItemName}" in Google Drive...`,
     });
     
-    // This is where we would actually create the folder or upload the file to Google Drive
-    // For now, we're just showing a toast message
-    // In a real implementation, you would use the Google Drive API
-    
     setTimeout(() => {
       toast({
         title: `${itemType} Created`,
@@ -101,28 +95,22 @@ const CourseFiles = () => {
     setNewItemName("");
     setFileToUpload(null);
     setIsCreateDialogOpen(false);
-    
-    // In a real implementation, you would refresh the file list here
   };
 
-  // Handle navigation to a folder
   const navigateToFolder = (folderName: string, folderId: string) => {
     setCurrentPath([...currentPath, { name: folderName, id: folderId }]);
   };
 
-  // Navigate up one level
   const navigateUp = () => {
     if (currentPath.length > 1) {
       setCurrentPath(currentPath.slice(0, -1));
     }
   };
 
-  // Navigate to specific path level
   const navigateToPath = (index: number) => {
     setCurrentPath(currentPath.slice(0, index + 1));
   };
 
-  // Get current folder ID
   const getCurrentFolderId = () => {
     return currentPath[currentPath.length - 1]?.id || "root";
   };
@@ -244,7 +232,6 @@ const CourseFiles = () => {
         )}
       </div>
       
-      {/* Dialog for creating a new folder or uploading a file */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent>
           <DialogHeader>

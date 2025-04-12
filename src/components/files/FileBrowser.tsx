@@ -24,7 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 type FileItem = {
   id: string;
   name: string;
-  type: "file";
+  type: "file" as const;
   fileType: string;
   webViewLink?: string;
 };
@@ -32,7 +32,7 @@ type FileItem = {
 type FolderItem = {
   id: string;
   name: string;
-  type: "folder";
+  type: "folder" as const;
 };
 
 type FileOrFolderItem = FileItem | FolderItem;
