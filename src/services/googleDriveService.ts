@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 // Constants for Google Drive API
@@ -135,7 +134,7 @@ export const getFileDetails = async (fileId: string): Promise<GoogleDriveFile> =
   }
 };
 
-// Save file reference to Supabase
+// Save file reference to Supabase (commented out until the table is created)
 export const saveFileReferenceToSupabase = async (
   fileId: string,
   fileName: string,
@@ -144,8 +143,9 @@ export const saveFileReferenceToSupabase = async (
   fileType: string
 ): Promise<void> => {
   try {
-    // Save file reference to Supabase
-    const { error } = await supabase.from("course_files").insert({
+    // We'll need to create the course_files table in Supabase before using this function
+    // For now, just log that we would save the file reference
+    console.log("Would save file reference:", {
       file_id: fileId,
       file_name: fileName,
       file_path: filePath.join('/'),
@@ -153,7 +153,16 @@ export const saveFileReferenceToSupabase = async (
       file_type: fileType,
     });
     
-    if (error) throw error;
+    // Uncomment when course_files table is created
+    // const { error } = await supabase.from("course_files").insert({
+    //   file_id: fileId,
+    //   file_name: fileName,
+    //   file_path: filePath.join('/'),
+    //   course_id: courseId,
+    //   file_type: fileType,
+    // });
+    // 
+    // if (error) throw error;
   } catch (error) {
     console.error("Error saving file reference:", error);
     throw error;

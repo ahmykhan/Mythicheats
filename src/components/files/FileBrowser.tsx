@@ -1,4 +1,3 @@
-
 import { useMemo, useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -77,7 +76,7 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
             return {
               id: file.id,
               name: file.name,
-              type: "folder"
+              type: "folder" as const
             };
           } else {
             // Extract file extension from name or mimeType
@@ -86,7 +85,7 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
             return {
               id: file.id,
               name: file.name,
-              type: "file",
+              type: "file" as const,
               fileType,
               webViewLink: file.webViewLink
             };
@@ -189,13 +188,12 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
           variant="outline" 
           className="mt-4"
           onClick={() => listFiles(currentFolderId).then(files => {
-            // Same conversion logic as above
-            const formattedFiles = files.map(file => {
+            const formattedFiles: FileOrFolderItem[] = files.map(file => {
               if (file.mimeType === "application/vnd.google-apps.folder") {
                 return {
                   id: file.id,
                   name: file.name,
-                  type: "folder"
+                  type: "folder" as const
                 };
               } else {
                 const fileType = file.fileExtension || getMimeTypeIcon(file.mimeType);
@@ -203,7 +201,7 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
                 return {
                   id: file.id,
                   name: file.name,
-                  type: "file",
+                  type: "file" as const,
                   fileType,
                   webViewLink: file.webViewLink
                 };
@@ -250,7 +248,6 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
                 if (item.type === "folder") {
                   onFolderClick(item.name, item.id);
                 } else if ('webViewLink' in item && item.webViewLink) {
-                  // Open file in new tab
                   window.open(item.webViewLink, "_blank");
                 }
               }}
