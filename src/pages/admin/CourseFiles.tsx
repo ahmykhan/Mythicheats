@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink } from "@/components/ui/breadcrumb";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,11 +25,10 @@ import {
   Search,
   Upload,
   FileArchive,
-  FileImage
+  FileImage,
+  ExternalLink
 } from "lucide-react";
 import { FileBrowser } from "@/components/files/FileBrowser";
-import { GoogleDriveAuthButton } from "@/components/files/GoogleDriveAuthButton";
-import { loadGoogleDriveApi, isAuthenticated } from "@/services/googleDriveService";
 
 interface PathItem {
   name: string;
@@ -40,34 +40,12 @@ const CourseFiles = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [createItemType, setCreateItemType] = useState<"folder" | "file">("folder");
   const [newItemName, setNewItemName] = useState("");
-  const [driveConnected, setDriveConnected] = useState(false);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPath, setCurrentPath] = useState<PathItem[]>([
-    { name: "My Drive", id: "1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e" }
+    { name: "My Drive", id: "root" }
   ]);
   const [activeTab, setActiveTab] = useState<string>("all");
-
-  useEffect(() => {
-    const checkDriveConnection = async () => {
-      try {
-        await loadGoogleDriveApi();
-        setDriveConnected(isAuthenticated());
-      } catch (error) {
-        console.error("Failed to check Google Drive connection:", error);
-      }
-    };
-    
-    checkDriveConnection();
-  }, []);
-
-  const handleAuthSuccess = () => {
-    setDriveConnected(true);
-    toast({
-      title: "Connected to Google Drive",
-      description: "Your Google Drive account has been connected successfully.",
-    });
-  };
 
   const handleCreateItem = () => {
     if (!newItemName.trim()) {
@@ -115,6 +93,10 @@ const CourseFiles = () => {
     return currentPath[currentPath.length - 1]?.id || "root";
   };
 
+  const openGoogleDriveFolder = () => {
+    window.open("https://drive.google.com/drive/folders/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e", "_blank");
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -145,91 +127,75 @@ const CourseFiles = () => {
               />
             </div>
             
-            {driveConnected ? (
-              <>
-                <Button onClick={() => {
-                  setCreateItemType("folder");
-                  setIsCreateDialogOpen(true);
-                }}>
-                  <FolderClosed className="mr-2 h-4 w-4" />
-                  New Folder
-                </Button>
-                <Button onClick={() => {
-                  setCreateItemType("file");
-                  setIsCreateDialogOpen(true);
-                }}>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Upload File
-                </Button>
-              </>
-            ) : (
-              <GoogleDriveAuthButton onAuthSuccess={handleAuthSuccess} />
-            )}
+            <Button onClick={openGoogleDriveFolder} variant="outline">
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Open in Google Drive
+            </Button>
+            
+            <Button onClick={() => {
+              setCreateItemType("folder");
+              setIsCreateDialogOpen(true);
+            }}>
+              <FolderClosed className="mr-2 h-4 w-4" />
+              New Folder
+            </Button>
+            <Button onClick={() => {
+              setCreateItemType("file");
+              setIsCreateDialogOpen(true);
+            }}>
+              <Upload className="mr-2 h-4 w-4" />
+              Upload File
+            </Button>
           </div>
         </div>
 
-        {driveConnected ? (
-          <Tabs defaultValue="all" onValueChange={setActiveTab}>
-            <TabsList>
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="assignments">Assignments</TabsTrigger>
-              <TabsTrigger value="notes">Notes</TabsTrigger>
-              <TabsTrigger value="past-papers">Past Papers</TabsTrigger>
-            </TabsList>
-            <TabsContent value="all" className="mt-4">
-              <FileBrowser 
-                path={currentPath.map(p => p.name)}
-                onFolderClick={navigateToFolder}
-                onNavigateUp={navigateUp}
-                searchQuery={searchQuery}
-                currentFolderId={getCurrentFolderId()}
-              />
-            </TabsContent>
-            <TabsContent value="assignments" className="mt-4">
-              <FileBrowser 
-                path={currentPath.map(p => p.name)}
-                onFolderClick={navigateToFolder}
-                onNavigateUp={navigateUp}
-                searchQuery={searchQuery}
-                filter="assignments"
-                currentFolderId={getCurrentFolderId()}
-              />
-            </TabsContent>
-            <TabsContent value="notes" className="mt-4">
-              <FileBrowser 
-                path={currentPath.map(p => p.name)}
-                onFolderClick={navigateToFolder}
-                onNavigateUp={navigateUp}
-                searchQuery={searchQuery}
-                filter="notes"
-                currentFolderId={getCurrentFolderId()}
-              />
-            </TabsContent>
-            <TabsContent value="past-papers" className="mt-4">
-              <FileBrowser 
-                path={currentPath.map(p => p.name)}
-                onFolderClick={navigateToFolder}
-                onNavigateUp={navigateUp}
-                searchQuery={searchQuery}
-                filter="past-papers"
-                currentFolderId={getCurrentFolderId()}
-              />
-            </TabsContent>
-          </Tabs>
-        ) : (
-          <Card className="p-8">
-            <div className="text-center space-y-4">
-              <FolderOpen className="h-16 w-16 mx-auto text-blue-500" />
-              <h2 className="text-xl font-semibold">Connect to Google Drive</h2>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                Connect your Google Drive account to browse, upload, and organize course files. Your files will be stored in your Google Drive.
-              </p>
-              <div className="pt-4">
-                <GoogleDriveAuthButton onAuthSuccess={handleAuthSuccess} />
-              </div>
-            </div>
-          </Card>
-        )}
+        <Tabs defaultValue="all" onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="assignments">Assignments</TabsTrigger>
+            <TabsTrigger value="notes">Notes</TabsTrigger>
+            <TabsTrigger value="past-papers">Past Papers</TabsTrigger>
+          </TabsList>
+          <TabsContent value="all" className="mt-4">
+            <FileBrowser 
+              path={currentPath.map(p => p.name)}
+              onFolderClick={navigateToFolder}
+              onNavigateUp={navigateUp}
+              searchQuery={searchQuery}
+              currentFolderId={getCurrentFolderId()}
+            />
+          </TabsContent>
+          <TabsContent value="assignments" className="mt-4">
+            <FileBrowser 
+              path={currentPath.map(p => p.name)}
+              onFolderClick={navigateToFolder}
+              onNavigateUp={navigateUp}
+              searchQuery={searchQuery}
+              filter="assignments"
+              currentFolderId={getCurrentFolderId()}
+            />
+          </TabsContent>
+          <TabsContent value="notes" className="mt-4">
+            <FileBrowser 
+              path={currentPath.map(p => p.name)}
+              onFolderClick={navigateToFolder}
+              onNavigateUp={navigateUp}
+              searchQuery={searchQuery}
+              filter="notes"
+              currentFolderId={getCurrentFolderId()}
+            />
+          </TabsContent>
+          <TabsContent value="past-papers" className="mt-4">
+            <FileBrowser 
+              path={currentPath.map(p => p.name)}
+              onFolderClick={navigateToFolder}
+              onNavigateUp={navigateUp}
+              searchQuery={searchQuery}
+              filter="past-papers"
+              currentFolderId={getCurrentFolderId()}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
       
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>

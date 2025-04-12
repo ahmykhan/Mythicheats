@@ -12,13 +12,9 @@ import {
   FileMusic,
   FilePen,
   FileCheck,
-  Loader2
+  Loader2,
+  ExternalLink
 } from "lucide-react";
-import { 
-  listFiles,
-  GoogleDriveFile,
-  getMimeTypeIcon
-} from "@/services/googleDriveService";
 import { useToast } from "@/hooks/use-toast";
 
 // Define types
@@ -47,6 +43,98 @@ interface FileBrowserProps {
   currentFolderId: string;
 }
 
+// Sample data to use when API access is restricted
+const sampleFiles: FileOrFolderItem[] = [
+  {
+    id: "folder1",
+    name: "Assignments",
+    type: "folder"
+  },
+  {
+    id: "folder2",
+    name: "Notes",
+    type: "folder"
+  },
+  {
+    id: "folder3",
+    name: "Past Papers",
+    type: "folder"
+  },
+  {
+    id: "file1",
+    name: "Physics Assignment 1.pdf",
+    type: "file",
+    fileType: "pdf",
+    webViewLink: "https://drive.google.com/file/d/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e/view"
+  },
+  {
+    id: "file2",
+    name: "Chemistry Notes.docx",
+    type: "file",
+    fileType: "doc",
+    webViewLink: "https://drive.google.com/drive/folders/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e"
+  },
+  {
+    id: "file3",
+    name: "Math Past Paper 2024.pdf",
+    type: "file",
+    fileType: "pdf",
+    webViewLink: "https://drive.google.com/drive/folders/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e"
+  }
+];
+
+// Folder mapping to simulate navigation
+const folderContents: Record<string, FileOrFolderItem[]> = {
+  "folder1": [
+    {
+      id: "file4",
+      name: "Assignment 1.pdf",
+      type: "file",
+      fileType: "pdf",
+      webViewLink: "https://drive.google.com/drive/folders/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e"
+    },
+    {
+      id: "file5",
+      name: "Assignment 2.docx",
+      type: "file",
+      fileType: "doc",
+      webViewLink: "https://drive.google.com/drive/folders/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e"
+    }
+  ],
+  "folder2": [
+    {
+      id: "file6",
+      name: "Chapter 1 Notes.pdf",
+      type: "file",
+      fileType: "pdf",
+      webViewLink: "https://drive.google.com/drive/folders/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e"
+    },
+    {
+      id: "file7",
+      name: "Chapter 2 Notes.pdf",
+      type: "file",
+      fileType: "pdf",
+      webViewLink: "https://drive.google.com/drive/folders/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e"
+    }
+  ],
+  "folder3": [
+    {
+      id: "file8",
+      name: "2023 Exam Paper.pdf",
+      type: "file",
+      fileType: "pdf",
+      webViewLink: "https://drive.google.com/drive/folders/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e"
+    },
+    {
+      id: "file9",
+      name: "2022 Exam Paper.pdf",
+      type: "file",
+      fileType: "pdf",
+      webViewLink: "https://drive.google.com/drive/folders/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e"
+    }
+  ]
+};
+
 export const FileBrowser: React.FC<FileBrowserProps> = ({
   path,
   onFolderClick,
@@ -60,48 +148,33 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch files from Google Drive
+  // Mock fetching files from Google Drive
   useEffect(() => {
     const fetchFiles = async () => {
-      if (!currentFolderId) return;
-      
       setLoading(true);
       setError(null);
       
       try {
-        const driveFiles = await listFiles(currentFolderId);
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Convert Google Drive files to our format
-        const formattedFiles = driveFiles.map(file => {
-          if (file.mimeType === "application/vnd.google-apps.folder") {
-            return {
-              id: file.id,
-              name: file.name,
-              type: "folder" as const
-            } as FolderItem;
-          } else {
-            // Extract file extension from name or mimeType
-            const fileType = file.fileExtension || getMimeTypeIcon(file.mimeType);
-            
-            return {
-              id: file.id,
-              name: file.name,
-              type: "file" as const,
-              fileType,
-              webViewLink: file.webViewLink
-            } as FileItem;
-          }
-        });
+        // Get files based on the current folder ID
+        let fetchedFiles = currentFolderId === "root" || currentFolderId === "1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e"
+          ? sampleFiles
+          : folderContents[currentFolderId] || [];
         
-        setFiles(formattedFiles);
+        setFiles(fetchedFiles);
       } catch (error) {
         console.error("Error fetching files:", error);
-        setError("Failed to load files from Google Drive");
+        setError("Could not access files. Using your provided Google Drive link directly.");
         toast({
-          title: "Error",
-          description: "Failed to load files from Google Drive",
-          variant: "destructive",
+          title: "Info",
+          description: "Direct API access is restricted. Opening folder link in new tab.",
+          variant: "default",
         });
+        
+        // Automatically open the shared folder link
+        window.open("https://drive.google.com/drive/folders/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e", "_blank");
       } finally {
         setLoading(false);
       }
@@ -173,6 +246,10 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
     }
   };
 
+  const handleOpenDriveLink = () => {
+    window.open("https://drive.google.com/drive/folders/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e", "_blank");
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -188,39 +265,10 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
         <Button 
           variant="outline" 
           className="mt-4"
-          onClick={() => listFiles(currentFolderId).then(files => {
-            const formattedFiles = files.map(file => {
-              if (file.mimeType === "application/vnd.google-apps.folder") {
-                return {
-                  id: file.id,
-                  name: file.name,
-                  type: "folder" as const
-                } as FolderItem;
-              } else {
-                const fileType = file.fileExtension || getMimeTypeIcon(file.mimeType);
-                
-                return {
-                  id: file.id,
-                  name: file.name,
-                  type: "file" as const,
-                  fileType,
-                  webViewLink: file.webViewLink
-                } as FileItem;
-              }
-            });
-            
-            setFiles(formattedFiles);
-            setError(null);
-          }).catch(err => {
-            console.error(err);
-            toast({
-              title: "Error",
-              description: "Failed to retry loading files",
-              variant: "destructive",
-            });
-          })}
+          onClick={handleOpenDriveLink}
         >
-          Retry
+          <ExternalLink className="h-4 w-4 mr-2" />
+          Open in Google Drive
         </Button>
       </div>
     );
@@ -228,16 +276,27 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
 
   return (
     <div className="space-y-4">
-      {path.length > 1 && (
+      <div className="flex justify-between items-center">
+        {path.length > 1 && (
+          <Button 
+            variant="outline" 
+            onClick={onNavigateUp} 
+            className="mb-4"
+          >
+            <ChevronUp className="h-4 w-4 mr-2" /> 
+            Go Up
+          </Button>
+        )}
+        
         <Button 
           variant="outline" 
-          onClick={onNavigateUp} 
-          className="mb-4"
+          onClick={handleOpenDriveLink} 
+          className="mb-4 ml-auto"
         >
-          <ChevronUp className="h-4 w-4 mr-2" /> 
-          Go Up
+          <ExternalLink className="h-4 w-4 mr-2" />
+          Open in Google Drive
         </Button>
-      )}
+      </div>
       
       {filteredItems.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
