@@ -1,7 +1,9 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 // Constants for Google Drive API
-const API_KEY = "YOUR_GOOGLE_API_KEY"; // This should be stored in environment variables
+const CLIENT_ID = "679596751279-dj0o27k9s3f7je7ol71kimo84al4h39v.apps.googleusercontent.com"; // The OAuth client ID for your Google API
+const API_KEY = "AIzaSyCcAYHG73Z-Jq30WFOf7zVuEdgl4eZFNLk"; // Google API key
 const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
 const SCOPES = "https://www.googleapis.com/auth/drive.readonly";
 
@@ -51,7 +53,7 @@ export const loadGoogleDriveApi = (): Promise<void> => {
           scriptAuth.defer = true;
           scriptAuth.onload = () => {
             tokenClient = window.google.accounts.oauth2.initTokenClient({
-              client_id: "YOUR_GOOGLE_CLIENT_ID", // This should be stored in environment variables
+              client_id: CLIENT_ID,
               scope: SCOPES,
               callback: () => {
                 isInitialized = true;
