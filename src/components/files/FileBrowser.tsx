@@ -1,5 +1,5 @@
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,120 +11,40 @@ import {
   FileImage,
   FileMusic,
   FilePen,
-  FileCheck
+  FileCheck,
+  Loader2
 } from "lucide-react";
+import { 
+  listFiles,
+  GoogleDriveFile,
+  getMimeTypeIcon
+} from "@/services/googleDriveService";
+import { useToast } from "@/hooks/use-toast";
 
-// Define types first
-type FileType = {
+// Define types
+type FileItem = {
+  id: string;
+  name: string;
   type: "file";
   fileType: string;
+  webViewLink?: string;
 };
 
-type FolderType = {
+type FolderItem = {
+  id: string;
+  name: string;
   type: "folder";
-  children: Record<string, FileOrFolder>;
 };
 
-type FileOrFolder = FileType | FolderType;
-
-// Updated sample data structure to match the types
-const sampleFiles: Record<string, FileOrFolder> = {
-  "Courses": {
-    type: "folder",
-    children: {
-      "Mathematics": {
-        type: "folder",
-        children: {
-          "Assignments": {
-            type: "folder",
-            children: {
-              "Assignment 1.pdf": { type: "file", fileType: "pdf" },
-              "Assignment 2.pdf": { type: "file", fileType: "pdf" },
-            }
-          },
-          "Notes": {
-            type: "folder",
-            children: {
-              "Calculus.pdf": { type: "file", fileType: "pdf" },
-              "Algebra.pdf": { type: "file", fileType: "pdf" },
-            }
-          },
-          "Past Papers": {
-            type: "folder",
-            children: {
-              "2023 Exam.pdf": { type: "file", fileType: "pdf" },
-              "2022 Exam.pdf": { type: "file", fileType: "pdf" },
-            }
-          },
-        }
-      },
-      "Physics": {
-        type: "folder",
-        children: {
-          "Assignments": {
-            type: "folder",
-            children: {
-              "Lab Report 1.pdf": { type: "file", fileType: "pdf" },
-              "Lab Report 2.pdf": { type: "file", fileType: "pdf" },
-            }
-          },
-          "Notes": {
-            type: "folder",
-            children: {
-              "Mechanics.pdf": { type: "file", fileType: "pdf" },
-              "Electromagnetism.pdf": { type: "file", fileType: "pdf" },
-              "Wave Mechanics.pptx": { type: "file", fileType: "pptx" },
-            }
-          },
-          "Past Papers": {
-            type: "folder",
-            children: {
-              "2023 Final Exam.pdf": { type: "file", fileType: "pdf" },
-              "2022 Final Exam.pdf": { type: "file", fileType: "pdf" },
-              "2023 Midterm.pdf": { type: "file", fileType: "pdf" },
-            }
-          },
-        }
-      },
-      "Computer Science": {
-        type: "folder",
-        children: {
-          "Assignments": {
-            type: "folder",
-            children: {
-              "Programming Assignment 1.zip": { type: "file", fileType: "zip" },
-              "Programming Assignment 2.zip": { type: "file", fileType: "zip" },
-              "Project Documentation.docx": { type: "file", fileType: "docx" },
-            }
-          },
-          "Notes": {
-            type: "folder",
-            children: {
-              "Algorithms.pdf": { type: "file", fileType: "pdf" },
-              "Data Structures.pdf": { type: "file", fileType: "pdf" },
-              "Class Diagrams.png": { type: "file", fileType: "png" },
-            }
-          },
-          "Past Papers": {
-            type: "folder",
-            children: {
-              "2023 Final.pdf": { type: "file", fileType: "pdf" },
-              "2022 Final.pdf": { type: "file", fileType: "pdf" },
-              "Practice Problems.pdf": { type: "file", fileType: "pdf" },
-            }
-          },
-        }
-      }
-    }
-  }
-};
+type FileOrFolderItem = FileItem | FolderItem;
 
 interface FileBrowserProps {
   path: string[];
-  onFolderClick: (folder: string) => void;
+  onFolderClick: (folder: string, folderId: string) => void;
   onNavigateUp: () => void;
   searchQuery?: string;
   filter?: "assignments" | "notes" | "past-papers";
+  currentFolderId: string;
 }
 
 export const FileBrowser: React.FC<FileBrowserProps> = ({
@@ -132,65 +52,96 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
   onFolderClick,
   onNavigateUp,
   searchQuery = "",
-  filter
+  filter,
+  currentFolderId
 }) => {
-  // Function to get the current folder's contents based on the path
-  const getCurrentFolder = (path: string[]): FolderType | null => {
-    let current: FileOrFolder | undefined = sampleFiles[path[0]];
-    
-    if (!current || current.type !== "folder") {
-      return null;
-    }
-    
-    // Skip first path segment as we've already processed it
-    for (let i = 1; i < path.length; i++) {
-      const folder = path[i];
-      if (current.type === "folder" && current.children[folder] && current.children[folder].type === "folder") {
-        current = current.children[folder];
-      } else {
-        return null;
-      }
-    }
-    
-    return current.type === "folder" ? current : null;
-  };
+  const { toast } = useToast();
+  const [files, setFiles] = useState<FileOrFolderItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Get current folder
-  const currentFolder = useMemo(() => getCurrentFolder(path), [path]);
-  
-  // Function to filter items based on search query and filter type
-  const filteredItems = useMemo(() => {
-    if (!currentFolder) return [];
-
-    // Convert the children object to array of entries [name, item]
-    const items = Object.entries(currentFolder.children)
-      .filter(([name, item]) => {
-        // Filter by search query
-        if (searchQuery && !name.toLowerCase().includes(searchQuery.toLowerCase())) {
-          return false;
-        }
-        
-        // Filter by type if specified
-        if (filter) {
-          // For folder items, check if their name matches the filter
-          if (item.type === "folder") {
-            return filter === "assignments" && name.toLowerCase() === "assignments" ||
-                   filter === "notes" && name.toLowerCase() === "notes" ||
-                   filter === "past-papers" && name.toLowerCase().includes("past");
-          }
-          
-          // For file items, rely on the parent path
-          const lastPathSegment = path[path.length - 1].toLowerCase();
-          return filter === "assignments" && lastPathSegment === "assignments" ||
-                 filter === "notes" && lastPathSegment === "notes" ||
-                 filter === "past-papers" && lastPathSegment.includes("past");
-        }
-        
-        return true;
-      });
+  // Fetch files from Google Drive
+  useEffect(() => {
+    const fetchFiles = async () => {
+      if (!currentFolderId) return;
       
-    return items;
-  }, [currentFolder, searchQuery, filter, path]);
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const driveFiles = await listFiles(currentFolderId);
+        
+        // Convert Google Drive files to our format
+        const formattedFiles: FileOrFolderItem[] = driveFiles.map(file => {
+          if (file.mimeType === "application/vnd.google-apps.folder") {
+            return {
+              id: file.id,
+              name: file.name,
+              type: "folder"
+            };
+          } else {
+            // Extract file extension from name or mimeType
+            const fileType = file.fileExtension || getMimeTypeIcon(file.mimeType);
+            
+            return {
+              id: file.id,
+              name: file.name,
+              type: "file",
+              fileType,
+              webViewLink: file.webViewLink
+            };
+          }
+        });
+        
+        setFiles(formattedFiles);
+      } catch (error) {
+        console.error("Error fetching files:", error);
+        setError("Failed to load files from Google Drive");
+        toast({
+          title: "Error",
+          description: "Failed to load files from Google Drive",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchFiles();
+  }, [currentFolderId, toast]);
+  
+  // Filter items based on search query and filter type
+  const filteredItems = useMemo(() => {
+    let filtered = files;
+    
+    // Filter by search query
+    if (searchQuery) {
+      filtered = filtered.filter(item => 
+        item.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    // Filter by type if specified
+    if (filter) {
+      // For folder items, check if their name matches the filter
+      filtered = filtered.filter(item => {
+        if (item.type === "folder") {
+          return filter === "assignments" && item.name.toLowerCase().includes("assignment") ||
+                 filter === "notes" && item.name.toLowerCase().includes("note") ||
+                 filter === "past-papers" && (item.name.toLowerCase().includes("past") || 
+                                              item.name.toLowerCase().includes("exam"));
+        }
+        
+        // For file items, check their name as well
+        return filter === "assignments" && item.name.toLowerCase().includes("assignment") ||
+               filter === "notes" && item.name.toLowerCase().includes("note") ||
+               filter === "past-papers" && (item.name.toLowerCase().includes("past") || 
+                                            item.name.toLowerCase().includes("exam"));
+      });
+    }
+    
+    return filtered;
+  }, [files, searchQuery, filter]);
 
   // Function to get the appropriate icon based on file type
   const getFileIcon = (fileType: string) => {
@@ -201,9 +152,11 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
       case "jpg":
       case "jpeg":
       case "gif":
+      case "image":
         return <FileImage className="h-4 w-4" />;
       case "zip":
       case "rar":
+      case "archive":
         return <FileArchive className="h-4 w-4" />;
       case "doc":
       case "docx":
@@ -211,13 +164,67 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
       case "ppt":
       case "pptx":
         return <FileCheck className="h-4 w-4" />;
+      case "mp3":
+      case "wav":
+      case "audio":
+        return <FileMusic className="h-4 w-4" />;
       default:
         return <File className="h-4 w-4" />;
     }
   };
 
-  if (!currentFolder) {
-    return <div>Folder not found</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-500">{error}</p>
+        <Button 
+          variant="outline" 
+          className="mt-4"
+          onClick={() => listFiles(currentFolderId).then(files => {
+            // Same conversion logic as above
+            const formattedFiles = files.map(file => {
+              if (file.mimeType === "application/vnd.google-apps.folder") {
+                return {
+                  id: file.id,
+                  name: file.name,
+                  type: "folder"
+                };
+              } else {
+                const fileType = file.fileExtension || getMimeTypeIcon(file.mimeType);
+                
+                return {
+                  id: file.id,
+                  name: file.name,
+                  type: "file",
+                  fileType,
+                  webViewLink: file.webViewLink
+                };
+              }
+            });
+            
+            setFiles(formattedFiles);
+            setError(null);
+          }).catch(err => {
+            console.error(err);
+            toast({
+              title: "Error",
+              description: "Failed to retry loading files",
+              variant: "destructive",
+            });
+          })}
+        >
+          Retry
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -235,16 +242,16 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
       
       {filteredItems.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredItems.map(([name, item]) => (
+          {filteredItems.map((item) => (
             <Card 
-              key={name} 
+              key={item.id} 
               className={`p-4 flex items-center cursor-pointer hover:bg-gray-50`}
               onClick={() => {
                 if (item.type === "folder") {
-                  onFolderClick(name);
-                } else {
-                  // Handle file click (e.g. preview)
-                  console.log("Clicked file:", name);
+                  onFolderClick(item.name, item.id);
+                } else if ('webViewLink' in item && item.webViewLink) {
+                  // Open file in new tab
+                  window.open(item.webViewLink, "_blank");
                 }
               }}
             >
@@ -252,13 +259,14 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
                 <FolderOpen className="h-5 w-5 mr-3 text-blue-500" />
               ) : (
                 <div className="mr-3 text-amber-500">
-                  {getFileIcon(item.fileType)}
+                  {getFileIcon('fileType' in item ? item.fileType : '')}
                 </div>
               )}
               <div>
-                <p className="font-medium truncate">{name}</p>
+                <p className="font-medium truncate">{item.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {item.type === "folder" ? "Folder" : item.fileType.toUpperCase()}
+                  {item.type === "folder" ? "Folder" : 
+                   'fileType' in item ? item.fileType.toUpperCase() : "File"}
                 </p>
               </div>
             </Card>
