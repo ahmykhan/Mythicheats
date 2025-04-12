@@ -1,3 +1,4 @@
+
 import { useMemo, useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 type FileItem = {
   id: string;
   name: string;
-  type: "file" as const;
+  type: "file";
   fileType: string;
   webViewLink?: string;
 };
@@ -32,7 +33,7 @@ type FileItem = {
 type FolderItem = {
   id: string;
   name: string;
-  type: "folder" as const;
+  type: "folder";
 };
 
 type FileOrFolderItem = FileItem | FolderItem;
@@ -71,13 +72,13 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
         const driveFiles = await listFiles(currentFolderId);
         
         // Convert Google Drive files to our format
-        const formattedFiles: FileOrFolderItem[] = driveFiles.map(file => {
+        const formattedFiles = driveFiles.map(file => {
           if (file.mimeType === "application/vnd.google-apps.folder") {
             return {
               id: file.id,
               name: file.name,
               type: "folder" as const
-            };
+            } as FolderItem;
           } else {
             // Extract file extension from name or mimeType
             const fileType = file.fileExtension || getMimeTypeIcon(file.mimeType);
@@ -88,7 +89,7 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
               type: "file" as const,
               fileType,
               webViewLink: file.webViewLink
-            };
+            } as FileItem;
           }
         });
         
@@ -188,13 +189,13 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
           variant="outline" 
           className="mt-4"
           onClick={() => listFiles(currentFolderId).then(files => {
-            const formattedFiles: FileOrFolderItem[] = files.map(file => {
+            const formattedFiles = files.map(file => {
               if (file.mimeType === "application/vnd.google-apps.folder") {
                 return {
                   id: file.id,
                   name: file.name,
                   type: "folder" as const
-                };
+                } as FolderItem;
               } else {
                 const fileType = file.fileExtension || getMimeTypeIcon(file.mimeType);
                 
@@ -204,7 +205,7 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
                   type: "file" as const,
                   fileType,
                   webViewLink: file.webViewLink
-                };
+                } as FileItem;
               }
             });
             
