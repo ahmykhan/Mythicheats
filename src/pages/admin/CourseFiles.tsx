@@ -29,11 +29,15 @@ import {
   ExternalLink
 } from "lucide-react";
 import { FileBrowser } from "@/components/files/FileBrowser";
+import { parseGoogleDriveId, getGoogleDriveFileLink } from "@/services/googleDriveService";
 
 interface PathItem {
   name: string;
   id: string;
 }
+
+// Google Drive folder ID from the link you provided
+const MAIN_FOLDER_ID = "1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e";
 
 const CourseFiles = () => {
   const { toast } = useToast();
@@ -43,7 +47,7 @@ const CourseFiles = () => {
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPath, setCurrentPath] = useState<PathItem[]>([
-    { name: "My School Drive", id: "root" }
+    { name: "My School Drive", id: MAIN_FOLDER_ID }
   ]);
   const [activeTab, setActiveTab] = useState<string>("all");
 
@@ -59,16 +63,10 @@ const CourseFiles = () => {
 
     const itemType = createItemType === "folder" ? "folder" : "file";
     toast({
-      title: `${itemType} Creation Initiated`,
-      description: `Creating ${itemType} "${newItemName}" in Google Drive...`,
+      title: "Google Drive Integration Required",
+      description: "Creating files requires direct Google Drive integration. Please use the 'Open in Google Drive' button to add files or folders directly.",
+      variant: "default",
     });
-    
-    setTimeout(() => {
-      toast({
-        title: `${itemType} Created`,
-        description: `${itemType === "folder" ? "Folder" : "File"} "${newItemName}" has been created successfully.`,
-      });
-    }, 1500);
     
     setNewItemName("");
     setFileToUpload(null);
@@ -90,11 +88,12 @@ const CourseFiles = () => {
   };
 
   const getCurrentFolderId = () => {
-    return currentPath[currentPath.length - 1]?.id || "root";
+    return currentPath[currentPath.length - 1]?.id || MAIN_FOLDER_ID;
   };
 
   const openGoogleDriveFolder = () => {
-    window.open("https://drive.google.com/drive/folders/1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e", "_blank");
+    const folderId = getCurrentFolderId();
+    window.open(getGoogleDriveFileLink(folderId, "application/vnd.google-apps.folder"), "_blank");
   };
 
   return (

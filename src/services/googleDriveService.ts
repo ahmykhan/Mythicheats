@@ -2,8 +2,8 @@
 import { supabase } from "@/integrations/supabase/client";
 
 // Constants for Google Drive API
-const CLIENT_ID = "679596751279-dj0o27k9s3f7je7ol71kimo84al4h39v.apps.googleusercontent.com"; // The OAuth client ID for your Google API
-const API_KEY = "AIzaSyCcAYHG73Z-Jq30WFOf7zVuEdgl4eZFNLk"; // Google API key
+const CLIENT_ID = "679596751279-dj0o27k9s3f7je7ol71kimo84al4h39v.apps.googleusercontent.com";
+const API_KEY = "AIzaSyCcAYHG73Z-Jq30WFOf7zVuEdgl4eZFNLk";
 const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
 const SCOPES = "https://www.googleapis.com/auth/drive.readonly";
 const SHARED_FOLDER_ID = "1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e"; // ID of the shared folder
@@ -18,6 +18,21 @@ export type GoogleDriveFile = {
   fileExtension?: string;
   parents?: string[];
 };
+
+// For public folder
+interface PublicFolderData {
+  id: string;
+  name: string;
+  files: PublicFileEntry[];
+}
+
+interface PublicFileEntry {
+  id: string;
+  name: string;
+  isFolder: boolean;
+  fileType?: string;
+  viewLink?: string;
+}
 
 let gapi: any = null;
 let tokenClient: any = null;
@@ -102,25 +117,51 @@ export const authenticateWithGoogleDrive = (): Promise<void> => {
   });
 };
 
-// List files in a folder
-export const listFiles = async (folderId: string = SHARED_FOLDER_ID): Promise<GoogleDriveFile[]> => {
-  if (!gapi) throw new Error("Google API not initialized");
-  
+// Public access functions (no authentication required)
+export const parseGoogleDriveId = (url: string): string | null => {
+  const regex = /\/folders\/([a-zA-Z0-9_-]+)/;
+  const match = url.match(regex);
+  return match ? match[1] : null;
+};
+
+// List files in a public folder
+export const listPublicFolderContents = async (folderId: string): Promise<GoogleDriveFile[]> => {
   try {
-    const response = await gapi.client.drive.files.list({
-      q: `'${folderId}' in parents and trashed = false`,
-      fields: "files(id, name, mimeType, webViewLink, iconLink, fileExtension, parents)",
-      orderBy: "folder,name",
-    });
+    // For a public folder, we can use the Google Drive API without authentication
+    const response = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&fields=files(id,name,mimeType,webViewLink)&key=${API_KEY}`
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error("Failed to fetch folder contents:", error);
+      throw new Error(`Failed to fetch folder contents: ${error.error?.message || 'Unknown error'}`);
+    }
+
+    const data = await response.json();
     
-    return response.result.files;
+    // Map to our format
+    return data.files.map((file: any) => ({
+      id: file.id,
+      name: file.name,
+      mimeType: file.mimeType,
+      webViewLink: file.webViewLink || getGoogleDriveFileLink(file.id, file.mimeType)
+    }));
   } catch (error) {
-    console.error("Error listing files:", error);
+    console.error("Error listing public folder contents:", error);
     throw error;
   }
 };
 
-// Get file details
+// Generate direct Google Drive links based on file ID and type
+export const getGoogleDriveFileLink = (fileId: string, mimeType?: string): string => {
+  if (mimeType === "application/vnd.google-apps.folder") {
+    return `https://drive.google.com/drive/folders/${fileId}`;
+  }
+  return `https://drive.google.com/file/d/${fileId}/view`;
+};
+
+// Get file details (for authenticated users)
 export const getFileDetails = async (fileId: string): Promise<GoogleDriveFile> => {
   if (!gapi) throw new Error("Google API not initialized");
   
@@ -137,38 +178,26 @@ export const getFileDetails = async (fileId: string): Promise<GoogleDriveFile> =
   }
 };
 
-// Save file reference to Supabase (commented out until the table is created)
-export const saveFileReferenceToSupabase = async (
-  fileId: string,
-  fileName: string,
-  filePath: string[],
-  courseId: string,
-  fileType: string
-): Promise<void> => {
-  try {
-    // We'll need to create the course_files table in Supabase before using this function
-    // For now, just log that we would save the file reference
-    console.log("Would save file reference:", {
-      file_id: fileId,
-      file_name: fileName,
-      file_path: filePath.join('/'),
-      course_id: courseId,
-      file_type: fileType,
-    });
-    
-    // Uncomment when course_files table is created
-    // const { error } = await supabase.from("course_files").insert({
-    //   file_id: fileId,
-    //   file_name: fileName,
-    //   file_path: filePath.join('/'),
-    //   course_id: courseId,
-    //   file_type: fileType,
-    // });
-    // 
-    // if (error) throw error;
-  } catch (error) {
-    console.error("Error saving file reference:", error);
-    throw error;
+// List files in a folder (for authenticated users)
+export const listFiles = async (folderId: string = SHARED_FOLDER_ID): Promise<GoogleDriveFile[]> => {
+  if (gapi && gapi.client) {
+    // Use the authenticated API if available
+    try {
+      const response = await gapi.client.drive.files.list({
+        q: `'${folderId}' in parents and trashed = false`,
+        fields: "files(id, name, mimeType, webViewLink, iconLink, fileExtension, parents)",
+        orderBy: "folder,name",
+      });
+      
+      return response.result.files;
+    } catch (error) {
+      console.error("Error listing files (authenticated):", error);
+      // Fall back to public method if auth fails
+      return listPublicFolderContents(folderId);
+    }
+  } else {
+    // Use the public method if not authenticated
+    return listPublicFolderContents(folderId);
   }
 };
 
