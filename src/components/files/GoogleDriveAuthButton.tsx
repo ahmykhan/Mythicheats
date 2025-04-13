@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { loadGoogleDriveApi, authenticateWithGoogleDrive, isAuthenticated, isUsingFallbackData } from "@/services/googleDriveService";
 import { GoogleIcon } from "./GoogleIcon";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
 
 interface GoogleDriveAuthButtonProps {
   onAuthSuccess?: () => void;
@@ -49,9 +49,10 @@ export const GoogleDriveAuthButton: React.FC<GoogleDriveAuthButtonProps> = ({ on
 
   if (authenticated) {
     return (
-      <Button variant="outline" disabled className="bg-green-50">
-        <GoogleIcon className="mr-2 h-4 w-4" />
-        Connected to Google Drive
+      <Button variant="outline" disabled className="bg-green-50 border-green-200 text-green-800">
+        <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" />
+        <span className="hidden sm:inline">Connected to Drive</span>
+        <span className="sm:hidden">Connected</span>
       </Button>
     );
   }
@@ -59,8 +60,9 @@ export const GoogleDriveAuthButton: React.FC<GoogleDriveAuthButtonProps> = ({ on
   if (usingFallback) {
     return (
       <Button variant="outline" className="bg-amber-50 border-amber-200 text-amber-800">
-        <AlertTriangle className="mr-2 h-4 w-4 text-amber-500" />
-        Using Demo Mode
+        <AlertTriangle className="mr-2 h-4 w-4 text-amber-600" />
+        <span className="hidden sm:inline">Demo Mode</span>
+        <span className="sm:hidden">Demo</span>
       </Button>
     );
   }
@@ -68,7 +70,12 @@ export const GoogleDriveAuthButton: React.FC<GoogleDriveAuthButtonProps> = ({ on
   return (
     <Button variant="outline" onClick={handleAuth} disabled={loading}>
       <GoogleIcon className="mr-2 h-4 w-4" />
-      {loading ? "Connecting..." : "Connect Google Drive"}
+      {loading ? "Connecting..." : (
+        <>
+          <span className="hidden sm:inline">Connect Drive</span>
+          <span className="sm:hidden">Connect</span>
+        </>
+      )}
     </Button>
   );
 };

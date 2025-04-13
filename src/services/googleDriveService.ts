@@ -166,9 +166,19 @@ export const authenticateWithGoogleDrive = (): Promise<void> => {
 
 // Public access functions (no authentication required)
 export const parseGoogleDriveId = (url: string): string | null => {
-  const regex = /\/folders\/([a-zA-Z0-9_-]+)/;
-  const match = url.match(regex);
-  return match ? match[1] : null;
+  // Support multiple formats of Google Drive URLs
+  const regexPatterns = [
+    /\/folders\/([a-zA-Z0-9_-]+)/,  // Regular folder URL
+    /\/file\/d\/([a-zA-Z0-9_-]+)/,  // File URL
+    /id=([a-zA-Z0-9_-]+)/           // ID parameter in URL
+  ];
+  
+  for (const regex of regexPatterns) {
+    const match = url.match(regex);
+    if (match) return match[1];
+  }
+  
+  return null;
 };
 
 // List files in a public folder
@@ -182,7 +192,7 @@ export const listPublicFolderContents = async (folderId: string): Promise<Google
     
     // For a public folder, we can use the Google Drive API without authentication
     const response = await fetch(
-      `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&fields=files(id,name,mimeType,webViewLink)&key=${API_KEY}`
+      `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&fields=files(id,name,mimeType,webViewLink,fileExtension)&key=${API_KEY}`
     );
 
     if (!response.ok) {
@@ -205,6 +215,7 @@ export const listPublicFolderContents = async (folderId: string): Promise<Google
       id: file.id,
       name: file.name,
       mimeType: file.mimeType,
+      fileExtension: file.fileExtension,
       webViewLink: file.webViewLink || getGoogleDriveFileLink(file.id, file.mimeType)
     }));
   } catch (error) {
@@ -225,7 +236,25 @@ export const getGoogleDriveFileLink = (fileId: string, mimeType?: string): strin
   if (mimeType === "application/vnd.google-apps.folder") {
     return `https://drive.google.com/drive/folders/${fileId}`;
   }
+  
+  // Google Workspace files need different URLs
+  if (mimeType?.includes("application/vnd.google-apps")) {
+    if (mimeType === "application/vnd.google-apps.document") {
+      return `https://docs.google.com/document/d/${fileId}/view`;
+    } else if (mimeType === "application/vnd.google-apps.spreadsheet") {
+      return `https://docs.google.com/spreadsheets/d/${fileId}/view`;
+    } else if (mimeType === "application/vnd.google-apps.presentation") {
+      return `https://docs.google.com/presentation/d/${fileId}/view`;
+    }
+  }
+  
+  // Regular files
   return `https://drive.google.com/file/d/${fileId}/view`;
+};
+
+// Get direct download link
+export const getDirectDownloadLink = (fileId: string): string => {
+  return `https://drive.google.com/uc?export=download&id=${fileId}`;
 };
 
 // Get file details (for authenticated users)
