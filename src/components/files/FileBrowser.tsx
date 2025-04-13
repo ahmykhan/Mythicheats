@@ -3,33 +3,28 @@ import { useMemo, useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  ChevronUp,
   ChevronLeft,
   File,
   FileText,
-  FolderOpen,
   Folder,
-  FileArchive,
-  FileImage,
-  FileMusic,
+  FileSpreadsheet,
   FilePen,
   FileCheck,
   Loader2,
-  ExternalLink,
   RefreshCw,
-  AlertTriangle,
-  Download,
-  FileSpreadsheet,
   FileVideo,
-  FileAudio
+  FileAudio,
+  FileImage,
+  FileArchive,
+  Download
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { 
   listFiles,
   getMimeTypeIcon,
   getGoogleDriveFileLink,
-  isUsingFallbackData,
-  getDirectDownloadLink
+  getDirectDownloadLink,
+  getFileExtension
 } from "@/services/googleDriveService";
 
 // Define types
@@ -71,7 +66,6 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
   const [files, setFiles] = useState<FileOrFolderItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [usingMockData, setUsingMockData] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   // Fetch files from Google Drive
@@ -84,9 +78,6 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
     try {
       const driveFiles = await listFiles(currentFolderId);
       
-      // We're using mock data
-      setUsingMockData(true);
-      
       // Convert Google Drive files to our format
       const formattedFiles: FileOrFolderItem[] = driveFiles.map(file => {
         if (file.mimeType === "application/vnd.google-apps.folder") {
@@ -96,8 +87,9 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
             type: "folder"
           };
         } else {
-          // Extract file extension from name or mimeType
-          const fileType = file.fileExtension || getMimeTypeIcon(file.mimeType);
+          // Extract file extension from name
+          const fileExtension = getFileExtension(file.name);
+          const fileType = getMimeTypeIcon(file.mimeType, fileExtension);
           
           return {
             id: file.id,
@@ -145,69 +137,57 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
       filtered = filtered.filter(item => {
         if (item.type === "folder") {
           return filter === "assignments" && item.name.toLowerCase().includes("assignment") ||
-                 filter === "notes" && item.name.toLowerCase().includes("note") ||
-                 filter === "past-papers" && (item.name.toLowerCase().includes("past") || 
-                                              item.name.toLowerCase().includes("exam"));
+                 filter === "notes" && (
+                   item.name.toLowerCase().includes("lecture") || 
+                   item.name.toLowerCase().includes("note")
+                 ) ||
+                 filter === "past-papers" && (
+                   item.name.toLowerCase().includes("past") || 
+                   item.name.toLowerCase().includes("exam")
+                 );
         }
         
         return filter === "assignments" && item.name.toLowerCase().includes("assignment") ||
-               filter === "notes" && item.name.toLowerCase().includes("note") ||
-               filter === "past-papers" && (item.name.toLowerCase().includes("past") || 
-                                            item.name.toLowerCase().includes("exam"));
+               filter === "notes" && (
+                 item.name.toLowerCase().includes("lecture") || 
+                 item.name.toLowerCase().includes("note")
+               ) ||
+               filter === "past-papers" && (
+                 item.name.toLowerCase().includes("past") || 
+                 item.name.toLowerCase().includes("exam")
+               );
       });
     }
     
     // Always show folders first
-    return [...filtered.filter(item => item.type === "folder"), ...filtered.filter(item => item.type === "file")];
+    return [
+      ...filtered.filter(item => item.type === "folder"), 
+      ...filtered.filter(item => item.type === "file")
+    ];
   }, [files, searchQuery, filter]);
 
   // Function to get the appropriate icon based on file type
   const getFileIcon = (fileType: string) => {
     switch (fileType.toLowerCase()) {
       case "pdf":
-        return <FileText className="h-5 w-5 text-red-500" />;
-      case "png":
-      case "jpg":
-      case "jpeg":
-      case "gif":
+        return <FileText className="h-6 w-6 text-red-500" />;
       case "image":
-        return <FileImage className="h-5 w-5 text-green-500" />;
-      case "zip":
-      case "rar":
+        return <FileImage className="h-6 w-6 text-green-500" />;
       case "archive":
-        return <FileArchive className="h-5 w-5 text-amber-500" />;
+        return <FileArchive className="h-6 w-6 text-amber-500" />;
       case "doc":
-      case "docx":
-        return <FilePen className="h-5 w-5 text-blue-500" />;
+        return <FilePen className="h-6 w-6 text-blue-500" />;
       case "xls":
-      case "xlsx":
-        return <FileSpreadsheet className="h-5 w-5 text-green-700" />;
+        return <FileSpreadsheet className="h-6 w-6 text-green-700" />;
       case "ppt":
-      case "pptx":
-        return <FileCheck className="h-5 w-5 text-orange-500" />;
-      case "mp3":
-      case "wav":
+        return <FileCheck className="h-6 w-6 text-orange-500" />;
       case "audio":
-        return <FileAudio className="h-5 w-5 text-purple-500" />;
-      case "mp4":
-      case "mov":
+        return <FileAudio className="h-6 w-6 text-purple-500" />;
       case "video":
-        return <FileVideo className="h-5 w-5 text-blue-400" />;
+        return <FileVideo className="h-6 w-6 text-blue-400" />;
       default:
-        return <File className="h-5 w-5 text-gray-500" />;
+        return <File className="h-6 w-6 text-gray-500" />;
     }
-  };
-
-  // Extract file extension from filename
-  const getFileExtension = (filename: string) => {
-    const parts = filename.split('.');
-    if (parts.length === 1) return '';
-    return parts[parts.length - 1].toUpperCase();
-  };
-
-  // Open the Google Drive folder
-  const handleOpenDriveLink = () => {
-    window.open(getGoogleDriveFileLink(currentFolderId, "application/vnd.google-apps.folder"), "_blank");
   };
 
   if (loading) {
@@ -274,44 +254,75 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
       
       {/* Rizzons-style file grid */}
       {filteredItems.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div className={viewMode === "grid" ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4" : "flex flex-col gap-2"}>
           {filteredItems.map((item) => (
-            <div 
-              key={item.id} 
-              className="flex flex-col items-center cursor-pointer rounded-md transition-all duration-200 hover:bg-gray-100 p-2"
-              onClick={() => {
-                if (item.type === "folder") {
-                  onFolderClick(item.name, item.id);
-                } else if ('webViewLink' in item && item.webViewLink) {
-                  window.open(item.webViewLink, "_blank");
-                }
-              }}
-            >
-              <div className="w-full aspect-square flex items-center justify-center bg-gray-100 rounded-lg mb-2">
-                {item.type === "folder" ? (
-                  <Folder className="h-16 w-16 text-gray-500" />
-                ) : (
-                  <div className="w-full h-full relative">
-                    {item.fileType === 'pdf' ? (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <FileText className="h-16 w-16 text-red-500" />
-                      </div>
-                    ) : (
+            viewMode === "grid" ? (
+              <div 
+                key={item.id} 
+                className="flex flex-col items-center cursor-pointer rounded-md transition-all duration-200 hover:bg-gray-100 p-2"
+                onClick={() => {
+                  if (item.type === "folder") {
+                    onFolderClick(item.name, item.id);
+                  } else if ('webViewLink' in item && item.webViewLink) {
+                    window.open(item.webViewLink, "_blank");
+                  }
+                }}
+              >
+                <div className="w-full aspect-square flex items-center justify-center bg-gray-100 rounded-lg mb-2">
+                  {item.type === "folder" ? (
+                    <Folder className="h-16 w-16 text-gray-500" />
+                  ) : (
+                    <div className="w-full h-full relative">
                       <div className="absolute inset-0 flex items-center justify-center">
                         {getFileIcon('fileType' in item ? item.fileType : '')}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
+                </div>
+                <div className="text-center w-full">
+                  <p className="font-medium text-sm truncate max-w-full">{item.name}</p>
+                  <p className="text-xs text-gray-500">
+                    {item.type === "folder" ? "Folder" : getFileExtension(item.name).toUpperCase()}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div 
+                key={item.id} 
+                className="flex items-center justify-between px-4 py-2 border rounded-md hover:bg-gray-50 cursor-pointer"
+                onClick={() => {
+                  if (item.type === "folder") {
+                    onFolderClick(item.name, item.id);
+                  } else if ('webViewLink' in item && item.webViewLink) {
+                    window.open(item.webViewLink, "_blank");
+                  }
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  {item.type === "folder" ? (
+                    <Folder className="h-5 w-5 text-gray-500" />
+                  ) : (
+                    getFileIcon('fileType' in item ? item.fileType : '')
+                  )}
+                  <span className="text-sm font-medium">{item.name}</span>
+                </div>
+                {item.type === "file" && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="opacity-50 hover:opacity-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if ('downloadLink' in item && item.downloadLink) {
+                        window.open(item.downloadLink, "_blank");
+                      }
+                    }}
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
                 )}
               </div>
-              <div className="text-center w-full">
-                <p className="font-medium text-sm truncate max-w-full">{item.name}</p>
-                <p className="text-xs text-gray-500">
-                  {item.type === "folder" ? "Folder" : 
-                   'fileType' in item ? getFileExtension(item.name) || item.fileType.toUpperCase() : "File"}
-                </p>
-              </div>
-            </div>
+            )
           ))}
         </div>
       ) : (

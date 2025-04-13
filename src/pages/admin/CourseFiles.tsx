@@ -6,21 +6,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Breadcrumb, 
+  BreadcrumbItem, 
+  BreadcrumbLink, 
+  BreadcrumbList, 
+  BreadcrumbSeparator 
+} from "@/components/ui/breadcrumb";
 import { useToast } from "@/hooks/use-toast";
 import {
-  FolderClosed,
   Search,
   ExternalLink,
+  Home,
+  ChevronRight
 } from "lucide-react";
 import { FileBrowser } from "@/components/files/FileBrowser";
-import { parseGoogleDriveId, getGoogleDriveFileLink } from "@/services/googleDriveService";
+import { getGoogleDriveFileLink } from "@/services/googleDriveService";
 import { GoogleDriveAuthButton } from "@/components/files/GoogleDriveAuthButton";
 
 interface PathItem {
@@ -28,7 +28,7 @@ interface PathItem {
   id: string;
 }
 
-// Google Drive folder ID from the link you provided
+// Google Drive folder ID from the link provided
 const MAIN_FOLDER_ID = "1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e";
 
 const CourseFiles = () => {
@@ -68,23 +68,34 @@ const CourseFiles = () => {
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold">Course Files</h1>
-            <div className="flex flex-wrap items-center gap-1 mt-1">
-              {currentPath.map((pathItem, index) => (
-                <div key={index} className="flex items-center">
-                  {index > 0 && <span className="mx-1 text-gray-400">/</span>}
-                  <button 
-                    onClick={() => navigateToPath(index)}
-                    className={`text-sm hover:underline ${
-                      index === currentPath.length - 1 
-                        ? 'font-medium text-primary'
-                        : 'text-gray-600'
-                    }`}
-                  >
-                    {pathItem.name}
-                  </button>
-                </div>
-              ))}
-            </div>
+            <Breadcrumb className="mt-1">
+              <BreadcrumbList>
+                {currentPath.map((pathItem, index) => (
+                  <React.Fragment key={index}>
+                    {index > 0 && <BreadcrumbSeparator><ChevronRight size={16} /></BreadcrumbSeparator>}
+                    <BreadcrumbItem>
+                      {index === currentPath.length - 1 ? (
+                        <span className="font-medium text-primary">{pathItem.name}</span>
+                      ) : (
+                        <BreadcrumbLink 
+                          onClick={() => navigateToPath(index)} 
+                          className="cursor-pointer"
+                        >
+                          {index === 0 ? (
+                            <div className="flex items-center gap-1">
+                              <Home size={14} />
+                              <span>{pathItem.name}</span>
+                            </div>
+                          ) : (
+                            pathItem.name
+                          )}
+                        </BreadcrumbLink>
+                      )}
+                    </BreadcrumbItem>
+                  </React.Fragment>
+                ))}
+              </BreadcrumbList>
+            </Breadcrumb>
           </div>
           <div className="flex gap-2 flex-wrap">
             <div className="relative min-w-[200px]">
