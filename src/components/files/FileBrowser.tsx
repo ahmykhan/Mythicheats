@@ -1,4 +1,3 @@
-
 import { useMemo, useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,13 +13,15 @@ import {
   FileCheck,
   Loader2,
   ExternalLink,
-  RefreshCw
+  RefreshCw,
+  AlertTriangle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { 
   listFiles,
   getMimeTypeIcon,
-  getGoogleDriveFileLink
+  getGoogleDriveFileLink,
+  isUsingFallbackData
 } from "@/services/googleDriveService";
 
 // Define types
@@ -61,6 +62,7 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
   const [files, setFiles] = useState<FileOrFolderItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [usingMockData, setUsingMockData] = useState(false);
 
   // Fetch files from Google Drive
   const fetchFiles = async () => {
@@ -71,6 +73,9 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
     
     try {
       const driveFiles = await listFiles(currentFolderId);
+      
+      // Check if using fallback data
+      setUsingMockData(isUsingFallbackData());
       
       // Convert Google Drive files to our format
       const formattedFiles: FileOrFolderItem[] = driveFiles.map(file => {
@@ -245,6 +250,21 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
           </Button>
         </div>
       </div>
+      
+      {usingMockData && (
+        <div className="bg-amber-50 border border-amber-200 rounded p-3 mb-4 flex items-center">
+          <AlertTriangle className="h-5 w-5 text-amber-500 mr-2" />
+          <div>
+            <p className="text-amber-800 text-sm">
+              Unable to connect to Google Drive API. Showing example content.
+              <br className="hidden sm:inline" />
+              <span className="sm:ml-1">
+                Please use "Open in Google Drive" to view actual files.
+              </span>
+            </p>
+          </div>
+        </div>
+      )}
       
       {filteredItems.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
