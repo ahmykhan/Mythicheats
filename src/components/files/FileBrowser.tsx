@@ -8,6 +8,7 @@ import {
   File,
   FileText,
   FolderOpen,
+  Folder,
   FileArchive,
   FileImage,
   FileMusic,
@@ -83,8 +84,8 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
     try {
       const driveFiles = await listFiles(currentFolderId);
       
-      // Check if using fallback data
-      setUsingMockData(isUsingFallbackData());
+      // We're using mock data
+      setUsingMockData(true);
       
       // Convert Google Drive files to our format
       const formattedFiles: FileOrFolderItem[] = driveFiles.map(file => {
@@ -112,10 +113,10 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
       setFiles(formattedFiles);
     } catch (error) {
       console.error("Error fetching files:", error);
-      setError("Failed to load files from Google Drive");
+      setError("Failed to load files");
       toast({
         title: "Error",
-        description: "Failed to load files from Google Drive",
+        description: "Failed to load files",
         variant: "destructive",
       });
     } finally {
@@ -141,7 +142,6 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
     
     // Filter by type if specified
     if (filter) {
-      // For folder items, check if their name matches the filter
       filtered = filtered.filter(item => {
         if (item.type === "folder") {
           return filter === "assignments" && item.name.toLowerCase().includes("assignment") ||
@@ -150,7 +150,6 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
                                               item.name.toLowerCase().includes("exam"));
         }
         
-        // For file items, check their name as well
         return filter === "assignments" && item.name.toLowerCase().includes("assignment") ||
                filter === "notes" && item.name.toLowerCase().includes("note") ||
                filter === "past-papers" && (item.name.toLowerCase().includes("past") || 
@@ -224,25 +223,15 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
       <div className="text-center py-8">
         <p className="text-red-500">{error}</p>
         <div className="flex justify-center gap-4 mt-4">
-          <Button 
-            variant="outline" 
-            onClick={fetchFiles}
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Retry
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={handleOpenDriveLink}
-          >
-            <ExternalLink className="h-4 w-4 mr-2" />
-            Open in Google Drive
+          <Button variant="outline" onClick={fetchFiles}>
+            <RefreshCw className="h-4 w-4 mr-2" /> Retry
           </Button>
         </div>
       </div>
     );
   }
 
+  // Rizzons-style grid view
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-4 bg-white p-4 rounded-lg shadow-sm border">
@@ -254,8 +243,7 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
               className="mr-2"
               size="sm"
             >
-              <ChevronLeft className="h-4 w-4 mr-1" /> 
-              Back
+              <ChevronLeft className="h-4 w-4 mr-1" /> Back
             </Button>
           )}
           <div className="flex items-center text-sm text-gray-500">
@@ -281,135 +269,51 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
             <RefreshCw className="h-4 w-4 mr-1" />
             <span className="hidden sm:inline">Refresh</span>
           </Button>
-          
-          <Button 
-            variant="outline" 
-            onClick={handleOpenDriveLink}
-            size="sm"
-          >
-            <ExternalLink className="h-4 w-4 mr-1" />
-            <span className="hidden sm:inline">Open in Drive</span>
-          </Button>
         </div>
       </div>
       
-      {usingMockData && (
-        <div className="bg-amber-50 border border-amber-200 rounded p-3 mb-4 flex items-center">
-          <AlertTriangle className="h-5 w-5 text-amber-500 mr-2 flex-shrink-0" />
-          <div>
-            <p className="text-amber-800 text-sm">
-              Using demo mode. Please use "Open in Drive" to view actual files.
-            </p>
-          </div>
-        </div>
-      )}
-      
+      {/* Rizzons-style file grid */}
       {filteredItems.length > 0 ? (
-        viewMode === "grid" ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredItems.map((item) => (
-              <Card 
-                key={item.id} 
-                className="overflow-hidden hover:shadow-md transition-all duration-200 border-gray-200"
-              >
-                <div 
-                  className={`p-4 cursor-pointer flex items-start hover:bg-gray-50`}
-                  onClick={() => {
-                    if (item.type === "folder") {
-                      onFolderClick(item.name, item.id);
-                    } else if ('webViewLink' in item && item.webViewLink) {
-                      window.open(item.webViewLink, "_blank");
-                    }
-                  }}
-                >
-                  <div className="mr-3 p-2 bg-gray-100 rounded-lg">
-                    {item.type === "folder" ? (
-                      <FolderOpen className="h-8 w-8 text-blue-500" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {filteredItems.map((item) => (
+            <div 
+              key={item.id} 
+              className="flex flex-col items-center cursor-pointer rounded-md transition-all duration-200 hover:bg-gray-100 p-2"
+              onClick={() => {
+                if (item.type === "folder") {
+                  onFolderClick(item.name, item.id);
+                } else if ('webViewLink' in item && item.webViewLink) {
+                  window.open(item.webViewLink, "_blank");
+                }
+              }}
+            >
+              <div className="w-full aspect-square flex items-center justify-center bg-gray-100 rounded-lg mb-2">
+                {item.type === "folder" ? (
+                  <Folder className="h-16 w-16 text-gray-500" />
+                ) : (
+                  <div className="w-full h-full relative">
+                    {item.fileType === 'pdf' ? (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <FileText className="h-16 w-16 text-red-500" />
+                      </div>
                     ) : (
-                      <div className="text-amber-500">
+                      <div className="absolute inset-0 flex items-center justify-center">
                         {getFileIcon('fileType' in item ? item.fileType : '')}
                       </div>
                     )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium mb-1 truncate">{item.name}</p>
-                    <p className="text-xs text-gray-500 bg-gray-100 rounded-full px-2 py-1 inline-block">
-                      {item.type === "folder" ? "Folder" : 
-                       'fileType' in item ? getFileExtension(item.name) || item.fileType.toUpperCase() : "File"}
-                    </p>
-                  </div>
-                </div>
-                
-                {item.type === "file" && 'downloadLink' in item && (
-                  <div className="border-t px-4 py-2 bg-gray-50 flex justify-end">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        window.open(item.downloadLink, "_blank");
-                      }}
-                      className="text-xs"
-                    >
-                      <Download className="h-3 w-3 mr-1" />
-                      Download
-                    </Button>
                   </div>
                 )}
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="border rounded-lg overflow-hidden bg-white">
-            <div className="divide-y">
-              {filteredItems.map((item) => (
-                <div 
-                  key={item.id}
-                  className="p-3 flex items-center cursor-pointer hover:bg-gray-50"
-                  onClick={() => {
-                    if (item.type === "folder") {
-                      onFolderClick(item.name, item.id);
-                    } else if ('webViewLink' in item && item.webViewLink) {
-                      window.open(item.webViewLink, "_blank");
-                    }
-                  }}
-                >
-                  <div className="mr-3 p-1.5 bg-gray-100 rounded">
-                    {item.type === "folder" ? (
-                      <FolderOpen className="h-5 w-5 text-blue-500" />
-                    ) : (
-                      <div>
-                        {getFileIcon('fileType' in item ? item.fileType : '')}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0 mr-4">
-                    <p className="font-medium truncate">{item.name}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500 bg-gray-100 rounded-full px-2 py-1">
-                      {item.type === "folder" ? "Folder" : 
-                       'fileType' in item ? getFileExtension(item.name) || item.fileType.toUpperCase() : "File"}
-                    </span>
-                    
-                    {item.type === "file" && 'downloadLink' in item && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          window.open(item.downloadLink, "_blank");
-                        }}
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
+              </div>
+              <div className="text-center w-full">
+                <p className="font-medium text-sm truncate max-w-full">{item.name}</p>
+                <p className="text-xs text-gray-500">
+                  {item.type === "folder" ? "Folder" : 
+                   'fileType' in item ? getFileExtension(item.name) || item.fileType.toUpperCase() : "File"}
+                </p>
+              </div>
             </div>
-          </div>
-        )
+          ))}
+        </div>
       ) : (
         <div className="text-center py-8 bg-gray-50 rounded-lg border border-dashed">
           <p className="text-gray-500">No items found in this location</p>

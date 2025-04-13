@@ -17,10 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   FolderClosed,
   Search,
-  Upload,
   ExternalLink,
-  FileArchive,
-  Info
 } from "lucide-react";
 import { FileBrowser } from "@/components/files/FileBrowser";
 import { parseGoogleDriveId, getGoogleDriveFileLink } from "@/services/googleDriveService";
@@ -36,37 +33,11 @@ const MAIN_FOLDER_ID = "1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e";
 
 const CourseFiles = () => {
   const { toast } = useToast();
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [createItemType, setCreateItemType] = useState<"folder" | "file">("folder");
-  const [newItemName, setNewItemName] = useState("");
-  const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPath, setCurrentPath] = useState<PathItem[]>([
-    { name: "My School Drive", id: MAIN_FOLDER_ID }
+    { name: "IICT Files", id: MAIN_FOLDER_ID }
   ]);
   const [activeTab, setActiveTab] = useState<string>("all");
-
-  const handleCreateItem = () => {
-    if (!newItemName.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid name",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const itemType = createItemType === "folder" ? "folder" : "file";
-    toast({
-      title: "Google Drive Integration Required",
-      description: "Creating files requires direct Google Drive integration. Please use the 'Open in Google Drive' button to add files or folders directly.",
-      variant: "default",
-    });
-    
-    setNewItemName("");
-    setFileToUpload(null);
-    setIsCreateDialogOpen(false);
-  };
 
   const navigateToFolder = (folderName: string, folderId: string) => {
     setCurrentPath([...currentPath, { name: folderName, id: folderId }]);
@@ -133,24 +104,6 @@ const CourseFiles = () => {
               <span className="hidden sm:inline">Open in Google Drive</span>
               <span className="sm:hidden">Drive</span>
             </Button>
-            
-            <Button onClick={() => {
-              setCreateItemType("folder");
-              setIsCreateDialogOpen(true);
-            }} variant="outline">
-              <FolderClosed className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">New Folder</span>
-              <span className="sm:hidden">Folder</span>
-            </Button>
-            
-            <Button onClick={() => {
-              setCreateItemType("file");
-              setIsCreateDialogOpen(true);
-            }} variant="outline">
-              <Upload className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Upload File</span>
-              <span className="sm:hidden">Upload</span>
-            </Button>
           </div>
         </div>
 
@@ -209,56 +162,6 @@ const CourseFiles = () => {
           </Tabs>
         </Card>
       </div>
-      
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {createItemType === "folder" ? "Create New Folder" : "Upload File"}
-            </DialogTitle>
-            <DialogDescription>
-              {createItemType === "folder" 
-                ? "Enter a name for the new folder in Google Drive" 
-                : "Select a file to upload to Google Drive"
-              }
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <Input
-                placeholder={createItemType === "folder" ? "Folder name" : "File name"}
-                value={newItemName}
-                onChange={(e) => setNewItemName(e.target.value)}
-              />
-            </div>
-            {createItemType === "file" && (
-              <div>
-                <Input 
-                  type="file" 
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      setFileToUpload(e.target.files[0]);
-                      if (!newItemName) {
-                        setNewItemName(e.target.files[0].name);
-                      }
-                    }
-                  }}
-                />
-              </div>
-            )}
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateItem}>
-              {createItemType === "folder" ? "Create Folder" : "Upload File"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </AdminLayout>
   );
 };
