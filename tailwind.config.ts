@@ -44,6 +44,18 @@ export default {
           800: "#312E81",
           900: "#2A2768",
         },
+        // Pink theme colors
+        pink: {
+          light: "#FFDEE2",
+          DEFAULT: "#FFA6C9",
+          dark: "#FF69B4",
+        },
+        // Purple theme colors
+        purple: {
+          light: "#E5DEFF",
+          DEFAULT: "#9b87f5",
+          dark: "#7E69AB",
+        },
         secondary: {
           DEFAULT: "#64748B",
           foreground: "#FFFFFF",
@@ -95,12 +107,28 @@ export default {
           "0%": { transform: "translateY(20px)", opacity: "0" },
           "100%": { transform: "translateY(0)", opacity: "1" },
         },
+        // Add more animations
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-10px)" },
+        },
+        pulse: {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.5" },
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         fadeIn: "fadeIn 0.3s ease-in-out",
         slideUp: "slideUp 0.5s ease-out",
+        float: "float 3s ease-in-out infinite",
+        pulse: "pulse 2s ease-in-out infinite",
+        shimmer: "shimmer 2s linear infinite",
       },
       backdropFilter: {
         'none': 'none',

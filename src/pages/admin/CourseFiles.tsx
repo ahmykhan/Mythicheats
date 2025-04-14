@@ -1,21 +1,23 @@
 
 import React from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
-import GoogleDriveEmbed from "@/components/drive/GoogleDriveEmbed";
+import EnhancedFileBrowser from "@/components/drive/EnhancedFileBrowser";
+import { ThemeProvider } from "@/context/ThemeContext";
+import ThemeSelector from "@/components/theme/ThemeSelector";
 
 const MAIN_FOLDER_ID = "1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e";
 
 const CourseFiles = () => {
   return (
-    <AdminLayout>
-      <div className="space-y-6 max-w-6xl mx-auto px-4">
-        <GoogleDriveEmbed 
+    <ThemeProvider>
+      <div className="overflow-hidden h-screen w-screen">
+        <ThemeSelector />
+        <EnhancedFileBrowser 
           folderId={MAIN_FOLDER_ID} 
-          title="Course Materials" 
-          height={700}
+          initialFolderName="Course Materials"
         />
       </div>
-    </AdminLayout>
+    </ThemeProvider>
   );
 };
 

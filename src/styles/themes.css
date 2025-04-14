@@ -1,0 +1,115 @@
+
+/* Dark Theme - Default */
+.theme-dark {
+  --background: 222 47% 11%;
+  --foreground: 210 40% 98%;
+  --card: 222 47% 8%;
+  --card-foreground: 210 40% 98%;
+  --border: 217 33% 17%;
+  --input: 217 33% 17%;
+  --primary: 239 84% 67%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 217 33% 17%;
+  --secondary-foreground: 210 40% 98%;
+  --accent: 215 27% 16%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 63% 31%;
+  --destructive-foreground: 210 40% 98%;
+  --ring: 239 84% 67%;
+
+  --gradient-bg: linear-gradient(to bottom right, #1a1f2c, #121212);
+  --card-bg: rgba(255, 255, 255, 0.05);
+  --card-border: rgba(255, 255, 255, 0.1);
+  --card-hover: rgba(255, 255, 255, 0.1);
+}
+
+/* Light Theme */
+.theme-light {
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --primary: 239 84% 67%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 47% 11%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 70% 50%;
+  --destructive-foreground: 210 40% 98%;
+  --ring: 239 84% 67%;
+
+  --gradient-bg: linear-gradient(to bottom right, #f8f9fa, #e9ecef);
+  --card-bg: rgba(255, 255, 255, 0.8);
+  --card-border: rgba(0, 0, 0, 0.1);
+  --card-hover: rgba(0, 0, 0, 0.05);
+}
+
+/* Pink Spring Theme */
+.theme-pink {
+  --background: 350 100% 98%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --border: 350 100% 88%;
+  --input: 350 100% 88%;
+  --primary: 339 90% 70%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 350 100% 94%;
+  --secondary-foreground: 222 47% 11%;
+  --accent: 350 100% 94%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 70% 50%;
+  --destructive-foreground: 210 40% 98%;
+  --ring: 339 90% 70%;
+
+  --gradient-bg: linear-gradient(to bottom right, #fde2e4, #fad2e1);
+  --card-bg: rgba(255, 255, 255, 0.7);
+  --card-border: rgba(252, 146, 157, 0.3);
+  --card-hover: rgba(252, 146, 157, 0.1);
+}
+
+/* Purple Cute Theme */
+.theme-purple {
+  --background: 260 100% 98%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --border: 260 100% 88%;
+  --input: 260 100% 88%;
+  --primary: 260 84% 67%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 260 100% 94%;
+  --secondary-foreground: 222 47% 11%;
+  --accent: 260 100% 94%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 70% 50%;
+  --destructive-foreground: 210 40% 98%;
+  --ring: 260 84% 67%;
+
+  --gradient-bg: linear-gradient(to bottom right, #e0dbff, #d8b4fe);
+  --card-bg: rgba(255, 255, 255, 0.7);
+  --card-border: rgba(167, 139, 250, 0.3);
+  --card-hover: rgba(167, 139, 250, 0.1);
+}
+
+/* Global styles for all themes */
+body {
+  background: var(--gradient-bg);
+  background-attachment: fixed;
+}
+
+.card-glass {
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--card-border);
+  transition: all 0.3s ease;
+}
+
+.card-glass:hover {
+  background: var(--card-hover);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
