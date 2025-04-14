@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -110,6 +111,19 @@ const Login = () => {
     }
   };
 
+  // Theme-based animations
+  useEffect(() => {
+    // Let theme apply before determining animations
+    setTimeout(() => {
+      const themeElement = document.documentElement;
+      const isThemeDark = themeElement.classList.contains('theme-dark');
+      const isThemePink = themeElement.classList.contains('theme-pink');
+      const isThemePurple = themeElement.classList.contains('theme-purple');
+      
+      // Add specific theme-based animation elements if needed
+    }, 100);
+  }, []);
+
   const CircleDecoration = ({ className, ...props }) => (
     <motion.div
       className={`absolute rounded-full mix-blend-multiply filter blur-xl opacity-70 ${className}`}
@@ -152,6 +166,9 @@ const Login = () => {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center overflow-hidden transition-colors duration-300">
+      {/* Animated background pattern */}
+      <div className="bg-pattern"></div>
+      
       <div className="absolute inset-0 w-full h-full overflow-hidden -z-10">
         <CircleDecoration className="bg-blue-300 dark:bg-blue-700 w-96 h-96 left-[-10%] top-[15%]" />
         <CircleDecoration className="bg-purple-300 dark:bg-purple-700 w-96 h-96 right-[-5%] top-[40%]" delay={1.5} />

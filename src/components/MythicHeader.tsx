@@ -16,7 +16,7 @@ const MythicHeader = () => {
       case 'pink':
         return 'bg-gradient-to-r from-red-400 via-pink-500 to-rose-500';
       case 'purple':
-        return 'bg-gradient-to-r from-indigo-400 via-purple-500 to-fuchsia-500';
+        return 'bg-gradient-to-r from-orange-400 via-amber-500 to-yellow-500';
       default:
         return 'bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500';
     }
@@ -71,8 +71,8 @@ const MythicHeader = () => {
           ))}
         </h1>
         
-        {/* Fire animation */}
-        <div className="absolute -top-8 left-0 right-0 flex justify-center">
+        {/* Fire animation - enhanced for purple theme */}
+        <div className={`absolute -top-8 left-0 right-0 flex justify-center ${theme === 'purple' ? 'scale-125' : ''}`}>
           {fireEmojis.map((emoji, index) => (
             <motion.span
               key={index}
@@ -81,10 +81,10 @@ const MythicHeader = () => {
               animate={{ 
                 y: [-5, -15, -5], 
                 opacity: [0.7, 1, 0.7],
-                scale: [1, 1.2, 1],
+                scale: theme === 'purple' ? [1, 1.4, 1] : [1, 1.2, 1],
               }}
               transition={{ 
-                duration: 2, 
+                duration: theme === 'purple' ? 1.5 : 2, 
                 repeat: Infinity, 
                 delay: index * 0.3,
                 ease: "easeInOut"
@@ -94,6 +94,36 @@ const MythicHeader = () => {
             </motion.span>
           ))}
         </div>
+        
+        {/* Extra fire particles for purple theme */}
+        {theme === 'purple' && (
+          <div className="absolute -top-12 left-0 right-0 flex justify-center pointer-events-none">
+            {[...Array(8)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute"
+                initial={{ 
+                  x: (i % 2 === 0 ? -1 : 1) * Math.random() * 40,
+                  y: 20,
+                  opacity: 0
+                }}
+                animate={{ 
+                  y: [20, -60 - Math.random() * 40],
+                  opacity: [0, 0.8, 0],
+                  scale: [0.5, 1 + Math.random() * 0.5, 0.2],
+                }}
+                transition={{
+                  duration: 1.5 + Math.random(),
+                  repeat: Infinity,
+                  delay: i * 0.2,
+                  ease: "easeOut"
+                }}
+              >
+                <div className="h-2 w-2 bg-orange-500 rounded-full filter blur-sm"></div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </motion.div>
     </div>
   );

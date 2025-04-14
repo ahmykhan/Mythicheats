@@ -17,10 +17,11 @@
   --destructive-foreground: 210 40% 98%;
   --ring: 239 84% 67%;
 
-  --gradient-bg: linear-gradient(to bottom right, #1a1f2c, #121212);
+  --gradient-bg: linear-gradient(to bottom right, #111111, #0a0a0a);
   --card-bg: rgba(255, 255, 255, 0.05);
   --card-border: rgba(255, 255, 255, 0.1);
   --card-hover: rgba(255, 255, 255, 0.1);
+  --mythic-text-gradient: linear-gradient(to right, #4F46E5, #6366F1);
 }
 
 /* Light Theme */
@@ -41,10 +42,11 @@
   --destructive-foreground: 210 40% 98%;
   --ring: 239 84% 67%;
 
-  --gradient-bg: linear-gradient(to bottom right, #f8f9fa, #e9ecef);
+  --gradient-bg: linear-gradient(to bottom right, #ffffff, #f5f5f5);
   --card-bg: rgba(255, 255, 255, 0.8);
   --card-border: rgba(0, 0, 0, 0.1);
   --card-hover: rgba(0, 0, 0, 0.05);
+  --mythic-text-gradient: linear-gradient(to right, #4F46E5, #6366F1);
 }
 
 /* Pink Spring Theme */
@@ -65,10 +67,11 @@
   --destructive-foreground: 210 40% 98%;
   --ring: 339 90% 70%;
 
-  --gradient-bg: linear-gradient(to bottom right, #fde2e4, #fad2e1);
+  --gradient-bg: linear-gradient(to bottom right, #fee1e8, #ffc6d3);
   --card-bg: rgba(255, 255, 255, 0.7);
   --card-border: rgba(252, 146, 157, 0.3);
   --card-hover: rgba(252, 146, 157, 0.1);
+  --mythic-text-gradient: linear-gradient(to right, #f87171, #ec4899);
 }
 
 /* Purple Cute Theme */
@@ -93,6 +96,7 @@
   --card-bg: rgba(255, 255, 255, 0.7);
   --card-border: rgba(167, 139, 250, 0.3);
   --card-hover: rgba(167, 139, 250, 0.1);
+  --mythic-text-gradient: linear-gradient(to right, #F97316, #FBBF24);
 }
 
 /* Global styles for all themes */
@@ -112,4 +116,76 @@ body {
   background: var(--card-hover);
   transform: translateY(-5px);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Animated background patterns */
+.bg-pattern {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.theme-dark .bg-pattern {
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(100, 100, 255, 0.2) 1%, transparent 8%),
+    radial-gradient(circle at 75% 75%, rgba(100, 100, 255, 0.2) 1%, transparent 8%),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 1%, transparent 8%);
+  background-size: 80px 80px;
+  animation: moveBackground 120s linear infinite;
+}
+
+.theme-light .bg-pattern {
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.1) 1%, transparent 8%),
+    radial-gradient(circle at 75% 75%, rgba(59, 130, 246, 0.1) 1%, transparent 8%);
+  background-size: 60px 60px;
+  animation: moveBackground 90s linear infinite;
+}
+
+.theme-pink .bg-pattern {
+  background-image: 
+    url("data:image/svg+xml,%3Csvg width='30' height='30' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23fda4af' fill-opacity='0.2' fill-rule='evenodd'%3E%3Cpath d='M10 10a2 2 0 1 1 4 0 2 2 0 0 1-4 0z'/%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0C0 10 10 10 10 0C10 10 20 10 20 0C20 10 10 10 10 20C10 10 0 10 0 20' fill='%23fbcfe8' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+  background-size: 80px 80px, 60px 60px;
+  animation: floatingFlowers 60s linear infinite;
+}
+
+.theme-purple .bg-pattern {
+  background-image: 
+    url("data:image/svg+xml,%3Csvg width='30' height='30' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23c4b5fd' fill-opacity='0.2' fill-rule='evenodd'%3E%3Cpath d='M10 10a2 2 0 1 1 4 0 2 2 0 0 1-4 0z'/%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0L10 10L20 0L10 10L20 20L10 10L0 20L10 10' stroke='%23a78bfa' stroke-width='1' stroke-opacity='0.1' fill='none' /%3E%3C/svg%3E");
+  background-size: 90px 90px, 70px 70px;
+  animation: floatingHearts 80s linear infinite;
+}
+
+@keyframes moveBackground {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 100% 100%;
+  }
+}
+
+@keyframes floatingFlowers {
+  0% {
+    background-position: 0% 0%, 0% 0%;
+  }
+  100% {
+    background-position: 100% 100%, 50% 50%;
+  }
+}
+
+@keyframes floatingHearts {
+  0% {
+    background-position: 0% 0%, 0% 0%;
+  }
+  100% {
+    background-position: 100% 100%, -50% -50%;
+  }
 }

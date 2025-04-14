@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ThemeSelector from "@/components/theme/ThemeSelector";
 import MythicHeader from "@/components/MythicHeader";
@@ -7,12 +8,29 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bell, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const MAIN_FOLDER_ID = "1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e";
+const ADMIN_EMAIL = "furyboy4592@gmail.com";
 
 const CourseFiles = () => {
   const [activeTab, setActiveTab] = useState("materials");
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const getSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data?.session?.user) {
+        setUserEmail(data.session.user.email);
+      } else {
+        // For demo purposes, set a default email
+        setUserEmail("user@example.com");
+      }
+    };
+
+    getSession();
+  }, []);
 
   const handleLogout = () => {
     toast({
@@ -25,8 +43,13 @@ const CourseFiles = () => {
     }, 1000);
   };
 
+  const isAdmin = userEmail === ADMIN_EMAIL;
+
   return (
     <div className="min-h-screen w-full overflow-x-hidden transition-colors duration-300 bg-gradient-to-br from-background to-background/80">
+      {/* Animated background pattern */}
+      <div className="bg-pattern"></div>
+      
       <div className="container mx-auto px-4 py-6">
         <div className="fixed top-4 right-4 z-50">
           <ThemeSelector />
@@ -76,7 +99,46 @@ const CourseFiles = () => {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
+                  className="relative"
                 >
+                  {/* Decorative elements that go behind the iframe */}
+                  <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                    <motion.div 
+                      className="absolute -right-20 top-1/4"
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      animate={{ opacity: 0.3, scale: 1 }}
+                      transition={{ duration: 1.5 }}
+                    >
+                      {/* Pink theme flowers or purple theme hearts */}
+                      {(() => {
+                        switch (true) {
+                          case document.documentElement.classList.contains('theme-pink'):
+                            return (
+                              <>
+                                {[...Array(5)].map((_, i) => (
+                                  <div key={i} className="text-4xl" style={{ position: 'absolute', transform: `rotate(${i * 72}deg) translateY(-100px)` }}>
+                                    🌸
+                                  </div>
+                                ))}
+                              </>
+                            );
+                          case document.documentElement.classList.contains('theme-purple'):
+                            return (
+                              <>
+                                {[...Array(5)].map((_, i) => (
+                                  <div key={i} className="text-4xl" style={{ position: 'absolute', transform: `rotate(${i * 72}deg) translateY(-100px)` }}>
+                                    💜
+                                  </div>
+                                ))}
+                              </>
+                            );
+                          default:
+                            return null;
+                        }
+                      })()}
+                    </motion.div>
+                  </div>
+                  
                   <GoogleDriveIframe folderId={MAIN_FOLDER_ID} />
                 </motion.div>
               </TabsContent>
@@ -89,17 +151,32 @@ const CourseFiles = () => {
                   transition={{ duration: 0.3 }}
                   className="space-y-4"
                 >
-                  <div className="rounded-lg glass-card p-6 backdrop-blur-md bg-white/10 border border-white/20">
-                    <h3 className="text-xl font-bold mb-2">New Course Released!</h3>
-                    <p className="text-muted-foreground">Check out the latest course on advanced techniques.</p>
-                    <p className="text-xs text-muted-foreground mt-2">2 days ago</p>
-                  </div>
-                  
-                  <div className="rounded-lg glass-card p-6 backdrop-blur-md bg-white/10 border border-white/20">
-                    <h3 className="text-xl font-bold mb-2">Weekly Challenge</h3>
-                    <p className="text-muted-foreground">New weekly challenge available. Test your skills now!</p>
-                    <p className="text-xs text-muted-foreground mt-2">5 days ago</p>
-                  </div>
+                  {isAdmin ? (
+                    <>
+                      <div className="rounded-lg glass-card p-6 backdrop-blur-md bg-white/10 border border-white/20">
+                        <h3 className="text-xl font-bold mb-2">New Course Released!</h3>
+                        <p className="text-muted-foreground">Check out the latest course on advanced techniques.</p>
+                        <p className="text-xs text-muted-foreground mt-2">2 days ago</p>
+                      </div>
+                      
+                      <div className="rounded-lg glass-card p-6 backdrop-blur-md bg-white/10 border border-white/20">
+                        <h3 className="text-xl font-bold mb-2">Weekly Challenge</h3>
+                        <p className="text-muted-foreground">New weekly challenge available. Test your skills now!</p>
+                        <p className="text-xs text-muted-foreground mt-2">5 days ago</p>
+                      </div>
+                      
+                      <div className="rounded-lg glass-card p-6 backdrop-blur-md bg-white/10 border border-white/20">
+                        <h3 className="text-xl font-bold mb-2">Admin Notice</h3>
+                        <p className="text-muted-foreground">Special notifications for admin users only.</p>
+                        <p className="text-xs text-muted-foreground mt-2">1 day ago</p>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="rounded-lg glass-card p-6 backdrop-blur-md bg-white/10 border border-white/20">
+                      <h3 className="text-xl font-bold mb-2">No Notifications</h3>
+                      <p className="text-muted-foreground">You don't have any notifications at this time.</p>
+                    </div>
+                  )}
                 </motion.div>
               </TabsContent>
 
@@ -113,8 +190,7 @@ const CourseFiles = () => {
                 >
                   <div className="rounded-lg glass-card p-6 backdrop-blur-md bg-white/10 border border-white/20">
                     <h3 className="text-xl font-bold mb-4">Profile Settings</h3>
-                    <p className="mb-2"><strong>Email:</strong> user@example.com</p>
-                    <p className="mb-4"><strong>Member since:</strong> January 2023</p>
+                    <p className="mb-4"><strong>Email:</strong> {userEmail || "user@example.com"}</p>
                     
                     <h3 className="text-lg font-bold mb-4 mt-6">Appearance</h3>
                     <p className="mb-2">Change the theme using the selector in the top right corner.</p>
