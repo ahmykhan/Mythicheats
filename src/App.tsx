@@ -12,7 +12,6 @@ import Notifications from "./pages/Notifications";
 
 // Admin pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import ManageCourses from "./pages/admin/ManageCourses";
 import ManageNotifications from "./pages/admin/ManageNotifications";
 import AdminSettings from "./pages/admin/AdminSettings";
 import CourseFiles from "./pages/admin/CourseFiles";
