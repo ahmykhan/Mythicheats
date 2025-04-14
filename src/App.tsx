@@ -29,12 +29,11 @@ const App = () => (
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<CourseFiles />} />
           <Route path="/notifications" element={<Notifications />} />
           
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/courses" element={<ManageCourses />} />
           <Route path="/admin/notifications" element={<ManageNotifications />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
           <Route path="/admin/files" element={<CourseFiles />} />
