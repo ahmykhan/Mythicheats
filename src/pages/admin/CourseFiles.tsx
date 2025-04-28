@@ -26,7 +26,7 @@ const CourseFiles = () => {
         setUserEmail(data.session.user.email);
       } else {
         // For demo purposes, set a default email
-        setUserEmail("demo@example.com");
+        setUserEmail("furyboy4592@gmail.com"); // Changed to match admin email for testing
       }
     };
 
@@ -176,7 +176,7 @@ const CourseFiles = () => {
                     className="rounded-lg glass-card p-6"
                   >
                     <h3 className="text-xl font-bold mb-4">Profile Settings</h3>
-                    <p className="mb-4"><strong>Email:</strong> {userEmail}</p>
+                    <p className="mb-4"><strong>Email:</strong> {userEmail || "loading..."}</p>
                     
                     <h3 className="text-lg font-bold mb-4 mt-6">Appearance</h3>
                     <p className="mb-2">Use the theme selector in the top right corner to change the site's appearance.</p>

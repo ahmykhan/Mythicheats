@@ -6,6 +6,7 @@ type ThemeType = 'dark' | 'light' | 'pink' | 'purple';
 interface ThemeContextType {
   theme: ThemeType;
   setTheme: (theme: ThemeType) => void;
+  isTransitioning: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -34,18 +35,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Save to localStorage
       localStorage.setItem('theme', newTheme);
       
+      // Apply theme to body to ensure full-page coloring
+      document.body.setAttribute('data-theme', newTheme);
+      
       // End transition after animation completes
       setTimeout(() => {
         setIsTransitioning(false);
       }, 500);
     };
 
-    // Apply theme with a small delay to ensure smooth transitions
-    const timeoutId = setTimeout(() => {
-      applyTheme(theme);
-    }, 10);
-
-    return () => clearTimeout(timeoutId);
+    // Apply theme immediately to prevent flash of wrong theme
+    applyTheme(theme);
   }, [theme]);
 
   const handleSetTheme = (newTheme: ThemeType) => {
@@ -56,7 +56,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme: handleSetTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme: handleSetTheme, isTransitioning }}>
       {children}
     </ThemeContext.Provider>
   );

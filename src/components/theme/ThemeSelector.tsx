@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 
 const ThemeSelector: React.FC = () => {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, isTransitioning } = useTheme();
   const { toast } = useToast();
   
   const handleThemeChange = (newTheme: 'dark' | 'light' | 'pink' | 'purple') => {
@@ -39,13 +39,27 @@ const ThemeSelector: React.FC = () => {
     <Popover>
       <PopoverTrigger asChild>
         <motion.button
+          id="theme-selector-button"
           variants={buttonVariants}
           whileHover="hover"
           whileTap="tap"
           className="p-3 rounded-full backdrop-blur-lg glass-button shadow-lg fixed top-4 right-4 z-50"
           aria-label="Change theme"
+          disabled={isTransitioning}
         >
           {getThemeIcon()}
+          {isTransitioning && (
+            <span className="absolute inset-0 flex items-center justify-center">
+              <motion.div 
+                className="w-full h-full rounded-full"
+                animate={{ 
+                  boxShadow: ['0 0 0 0 rgba(255,255,255,0)', '0 0 0 10px rgba(255,255,255,0)'],
+                  scale: [1, 1.2, 1]
+                }}
+                transition={{ duration: 1, repeat: 0 }}
+              />
+            </span>
+          )}
         </motion.button>
       </PopoverTrigger>
       
@@ -56,6 +70,7 @@ const ThemeSelector: React.FC = () => {
             size="lg"
             onClick={() => handleThemeChange('dark')}
             className={`flex items-center justify-center gap-2 transition-all ${theme === 'dark' ? 'bg-primary' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
+            disabled={isTransitioning}
           >
             <Moon className="w-5 h-5 text-blue-300" />
             <span>Dark</span>
@@ -66,6 +81,7 @@ const ThemeSelector: React.FC = () => {
             size="lg"
             onClick={() => handleThemeChange('light')}
             className={`flex items-center justify-center gap-2 transition-all ${theme === 'light' ? 'bg-primary' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
+            disabled={isTransitioning}
           >
             <Sun className="w-5 h-5 text-yellow-400" />
             <span>Light</span>
@@ -76,6 +92,7 @@ const ThemeSelector: React.FC = () => {
             size="lg"
             onClick={() => handleThemeChange('pink')}
             className={`flex items-center justify-center gap-2 transition-all ${theme === 'pink' ? 'bg-primary' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
+            disabled={isTransitioning}
           >
             <Flower className="w-5 h-5 text-pink-400" />
             <span>Spring</span>
@@ -86,6 +103,7 @@ const ThemeSelector: React.FC = () => {
             size="lg"
             onClick={() => handleThemeChange('purple')}
             className={`flex items-center justify-center gap-2 transition-all ${theme === 'purple' ? 'bg-primary' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
+            disabled={isTransitioning}
           >
             <Sparkles className="w-5 h-5 text-purple-400" />
             <span>Cute</span>

@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { useTheme } from "@/context/ThemeContext";
+import ThemeSelector from "@/components/theme/ThemeSelector";
 
 const Dashboard = () => {
   const [courses, setCourses] = useState<any[]>([]);

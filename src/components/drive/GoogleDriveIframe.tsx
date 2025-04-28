@@ -25,6 +25,21 @@ const GoogleDriveIframe: React.FC<GoogleDriveIframeProps> = ({ folderId }) => {
     }
   };
 
+  useEffect(() => {
+    // Reset iframe load state when theme changes to trigger reload animation
+    setIframeLoaded(false);
+    
+    // Give time for the iframe to reset
+    const timer = setTimeout(() => {
+      const iframe = document.querySelector('.drive-iframe') as HTMLIFrameElement;
+      if (iframe) {
+        iframe.src = iframe.src;
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [theme]);
+
   // Theme-specific decorative elements
   const renderThemeDecorations = () => {
     switch(theme) {
@@ -93,34 +108,31 @@ const GoogleDriveIframe: React.FC<GoogleDriveIframeProps> = ({ folderId }) => {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="relative z-10"
+        className="relative z-10 themed-iframe-container"
       >
-        <div className={`p-8 rounded-2xl shadow-lg transition-all duration-500 ease-in-out glass-card ${
-          theme === 'dark' ? 'bg-opacity-70' : 
-          theme === 'light' ? 'bg-opacity-90' : 
-          'bg-opacity-80'
-        }`}>
-          <div className="relative">
-            {!iframeLoaded && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-              </div>
-            )}
-            <iframe 
-              src={embedUrl}
-              width="100%"
-              height="600"
-              style={{ 
-                border: 0,
-                opacity: iframeLoaded ? 1 : 0,
-                transition: 'opacity 0.5s ease-in-out'
-              }}
-              onLoad={() => setIframeLoaded(true)}
-              allowFullScreen
-              className={`rounded-xl transition-all duration-500 ${theme}-iframe`}
-              title="Google Drive Folder"
-            ></iframe>
-          </div>
+        <div className="relative">
+          {!iframeLoaded && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>
+          )}
+          <iframe 
+            src={embedUrl}
+            width="100%"
+            height="600"
+            className={`drive-iframe rounded-xl transition-all duration-500 ${theme}-iframe ${iframeLoaded ? 'opacity-100' : 'opacity-0'}`}
+            onLoad={() => {
+              // Small delay to ensure styles are applied
+              setTimeout(() => setIframeLoaded(true), 300);
+            }}
+            allowFullScreen
+            title="Google Drive Folder"
+          ></iframe>
+          
+          {/* Add a themed overlay to the iframe to ensure consistent styling */}
+          <div 
+            className={`absolute inset-0 pointer-events-none ${theme}-iframe rounded-xl transition-all duration-500 opacity-20`}
+          ></div>
         </div>
       </motion.div>
     </div>
