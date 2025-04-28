@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/context/ThemeContext";
+import ThemeSelector from "@/components/theme/ThemeSelector";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
@@ -24,6 +25,7 @@ const App = () => (
       {/* Add the animated background pattern div */}
       <div className="bg-pattern"></div>
       
+      <ThemeSelector />
       <Toaster />
       <Sonner />
       <BrowserRouter>

@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -10,6 +10,7 @@ interface GoogleDriveIframeProps {
 const GoogleDriveIframe: React.FC<GoogleDriveIframeProps> = ({ folderId }) => {
   const { theme } = useTheme();
   const embedUrl = `https://drive.google.com/embeddedfolderview?id=${folderId}#grid`;
+  const [iframeLoaded, setIframeLoaded] = useState(false);
 
   // Animation variants
   const containerVariants = {
@@ -94,16 +95,32 @@ const GoogleDriveIframe: React.FC<GoogleDriveIframeProps> = ({ folderId }) => {
         animate="visible"
         className="relative z-10"
       >
-        <div className="p-8 rounded-2xl shadow-lg transition-all duration-500 ease-in-out glass-card">
-          <iframe 
-            src={embedUrl}
-            width="100%"
-            height="600"
-            style={{ border: 0 }}
-            allowFullScreen
-            className="rounded-xl transition-all duration-500"
-            title="Google Drive Folder"
-          ></iframe>
+        <div className={`p-8 rounded-2xl shadow-lg transition-all duration-500 ease-in-out glass-card ${
+          theme === 'dark' ? 'bg-opacity-70' : 
+          theme === 'light' ? 'bg-opacity-90' : 
+          'bg-opacity-80'
+        }`}>
+          <div className="relative">
+            {!iframeLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+              </div>
+            )}
+            <iframe 
+              src={embedUrl}
+              width="100%"
+              height="600"
+              style={{ 
+                border: 0,
+                opacity: iframeLoaded ? 1 : 0,
+                transition: 'opacity 0.5s ease-in-out'
+              }}
+              onLoad={() => setIframeLoaded(true)}
+              allowFullScreen
+              className={`rounded-xl transition-all duration-500 ${theme}-iframe`}
+              title="Google Drive Folder"
+            ></iframe>
+          </div>
         </div>
       </motion.div>
     </div>

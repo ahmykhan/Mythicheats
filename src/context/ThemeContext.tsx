@@ -16,10 +16,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const savedTheme = localStorage.getItem('theme') as ThemeType;
     return savedTheme || 'dark';
   });
+  
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
     // Function to apply theme
     const applyTheme = (newTheme: ThemeType) => {
+      // Indicate we're starting a transition
+      setIsTransitioning(true);
+      
       // Remove all previous theme classes
       document.documentElement.classList.remove('theme-dark', 'theme-light', 'theme-pink', 'theme-purple');
       
@@ -28,6 +33,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       
       // Save to localStorage
       localStorage.setItem('theme', newTheme);
+      
+      // End transition after animation completes
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 500);
     };
 
     // Apply theme with a small delay to ensure smooth transitions
@@ -39,7 +49,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [theme]);
 
   const handleSetTheme = (newTheme: ThemeType) => {
-    setTheme(newTheme);
+    // Only allow theme change if not currently transitioning
+    if (!isTransitioning) {
+      setTheme(newTheme);
+    }
   };
 
   return (

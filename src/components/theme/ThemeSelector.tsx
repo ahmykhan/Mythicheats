@@ -5,12 +5,19 @@ import { useTheme } from '@/context/ThemeContext';
 import { Sun, Moon, Flower, Sparkles } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
 
 const ThemeSelector: React.FC = () => {
   const { theme, setTheme } = useTheme();
+  const { toast } = useToast();
   
   const handleThemeChange = (newTheme: 'dark' | 'light' | 'pink' | 'purple') => {
     setTheme(newTheme);
+    toast({
+      title: `${newTheme.charAt(0).toUpperCase() + newTheme.slice(1)} theme activated`,
+      description: "Your new theme has been applied to the entire site.",
+      duration: 2000,
+    });
   };
   
   const getThemeIcon = () => {
@@ -22,14 +29,21 @@ const ThemeSelector: React.FC = () => {
       default: return <Moon className="w-5 h-5 text-blue-300" />;
     }
   };
+
+  const buttonVariants = {
+    hover: { scale: 1.1, rotate: [0, 5, 0] },
+    tap: { scale: 0.95 }
+  };
   
   return (
     <Popover>
       <PopoverTrigger asChild>
         <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          variants={buttonVariants}
+          whileHover="hover"
+          whileTap="tap"
           className="p-3 rounded-full backdrop-blur-lg glass-button shadow-lg fixed top-4 right-4 z-50"
+          aria-label="Change theme"
         >
           {getThemeIcon()}
         </motion.button>
