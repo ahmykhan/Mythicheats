@@ -121,6 +121,11 @@ const GoogleDriveIframe: React.FC<GoogleDriveIframeProps> = ({ folderId }) => {
             width="100%"
             height="600"
             className={`drive-iframe rounded-xl transition-all duration-500 ${theme}-iframe ${iframeLoaded ? 'opacity-100' : 'opacity-0'}`}
+            style={{
+              backgroundColor: `var(--iframe-bg, rgba(255, 255, 255, 0.1))`,
+              border: `1px solid var(--iframe-border, rgba(255, 255, 255, 0.1))`,
+              boxShadow: '0 8px 30px rgba(0, 0, 0, 0.1)',
+            }}
             onLoad={() => {
               // Small delay to ensure styles are applied
               setTimeout(() => setIframeLoaded(true), 300);
@@ -131,7 +136,7 @@ const GoogleDriveIframe: React.FC<GoogleDriveIframeProps> = ({ folderId }) => {
           
           {/* Add a themed overlay to the iframe to ensure consistent styling */}
           <div 
-            className={`absolute inset-0 pointer-events-none ${theme}-iframe rounded-xl transition-all duration-500 opacity-20`}
+            className={`absolute inset-0 pointer-events-none ${theme}-iframe-overlay rounded-xl transition-all duration-500 opacity-20`}
           ></div>
         </div>
       </motion.div>

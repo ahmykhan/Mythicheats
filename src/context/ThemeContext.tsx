@@ -38,19 +38,30 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Apply theme to body to ensure full-page coloring
       document.body.setAttribute('data-theme', newTheme);
       
+      // Force repaint to ensure styles apply correctly
+      document.body.style.display = 'none';
+      document.body.offsetHeight; // Force a repaint
+      document.body.style.display = '';
+      
       // End transition after animation completes
       setTimeout(() => {
         setIsTransitioning(false);
-      }, 500);
+      }, 600); // Increased transition time
     };
 
-    // Apply theme immediately to prevent flash of wrong theme
+    // Apply theme immediately
     applyTheme(theme);
+
+    // Make theme available globally for debugging
+    window.currentTheme = theme;
+    
+    console.log("Theme applied:", theme);
   }, [theme]);
 
   const handleSetTheme = (newTheme: ThemeType) => {
     // Only allow theme change if not currently transitioning
     if (!isTransitioning) {
+      console.log("Setting new theme:", newTheme);
       setTheme(newTheme);
     }
   };

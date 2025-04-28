@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/context/ThemeContext";
+import ThemeSelector from "@/components/theme/ThemeSelector";
 
 const MAIN_FOLDER_ID = "1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e";
 const ADMIN_EMAIL = "furyboy4592@gmail.com";
@@ -21,17 +22,23 @@ const CourseFiles = () => {
 
   useEffect(() => {
     const getSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data?.session?.user) {
-        setUserEmail(data.session.user.email);
-      } else {
-        // For demo purposes, set a default email
-        setUserEmail("furyboy4592@gmail.com"); // Changed to match admin email for testing
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data?.session?.user) {
+          setUserEmail(data.session.user.email);
+        } else {
+          // For demo purposes, set a default email
+          setUserEmail("furyboy4592@gmail.com"); // Changed to match admin email for testing
+        }
+      } catch (error) {
+        console.error("Error fetching session:", error);
+        setUserEmail("furyboy4592@gmail.com");
       }
     };
 
     getSession();
-  }, []);
+    console.log("Current theme:", theme);
+  }, [theme]);
 
   const handleLogout = () => {
     toast({
@@ -60,7 +67,7 @@ const CourseFiles = () => {
   };
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden transition-all duration-500 ease-in-out">
+    <div className={`min-h-screen w-full overflow-x-hidden transition-all duration-500 ease-in-out theme-${theme}`}>
       <div className="container mx-auto px-4 py-6 transition-all duration-500">
         <MythicHeader />
 
@@ -179,7 +186,8 @@ const CourseFiles = () => {
                     <p className="mb-4"><strong>Email:</strong> {userEmail || "loading..."}</p>
                     
                     <h3 className="text-lg font-bold mb-4 mt-6">Appearance</h3>
-                    <p className="mb-2">Use the theme selector in the top right corner to change the site's appearance.</p>
+                    <p className="mb-2">Current theme: <span className="font-semibold capitalize">{theme}</span></p>
+                    <p className="mb-4">Use the theme selector in the top right corner to change the site's appearance.</p>
                     
                     <div className="mt-8">
                       <Button 

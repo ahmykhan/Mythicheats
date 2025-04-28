@@ -22,7 +22,6 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      {/* Add the animated background pattern div */}
       <div className="bg-pattern"></div>
       
       <ThemeSelector />

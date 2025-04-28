@@ -237,6 +237,23 @@ html, body {
   border: 1px solid var(--iframe-border) !important;
 }
 
+/* Theme-specific iframe overlays */
+.dark-iframe-overlay {
+  background: linear-gradient(to bottom right, rgba(30, 30, 40, 0.15), rgba(15, 15, 25, 0.25));
+}
+
+.light-iframe-overlay {
+  background: linear-gradient(to bottom right, rgba(240, 240, 250, 0.15), rgba(220, 220, 230, 0.25));
+}
+
+.pink-iframe-overlay {
+  background: linear-gradient(to bottom right, rgba(255, 200, 220, 0.15), rgba(250, 180, 200, 0.25));
+}
+
+.purple-iframe-overlay {
+  background: linear-gradient(to bottom right, rgba(220, 200, 255, 0.15), rgba(190, 170, 250, 0.25));
+}
+
 /* Purple theme fire text effect */
 .theme-purple .mythic-fire-text {
   background-image: linear-gradient(-45deg, #F97316, #FBBF24, #F59E0B, #FEF3C7);
