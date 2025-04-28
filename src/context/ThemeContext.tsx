@@ -1,6 +1,13 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+// Define the window interface to include currentTheme
+declare global {
+  interface Window {
+    currentTheme?: 'dark' | 'light' | 'pink' | 'purple';
+  }
+}
+
 type ThemeType = 'dark' | 'light' | 'pink' | 'purple';
 
 interface ThemeContextType {
