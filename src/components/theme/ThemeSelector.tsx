@@ -1,56 +1,84 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/context/ThemeContext';
 import { Sun, Moon, Flower, Sparkles } from 'lucide-react';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
 
 const ThemeSelector: React.FC = () => {
   const { theme, setTheme } = useTheme();
   
+  const handleThemeChange = (newTheme: 'dark' | 'light' | 'pink' | 'purple') => {
+    setTheme(newTheme);
+  };
+  
+  const getThemeIcon = () => {
+    switch(theme) {
+      case 'dark': return <Moon className="w-5 h-5 text-blue-300" />;
+      case 'light': return <Sun className="w-5 h-5 text-yellow-400" />;
+      case 'pink': return <Flower className="w-5 h-5 text-pink-400" />;
+      case 'purple': return <Sparkles className="w-5 h-5 text-purple-400" />;
+      default: return <Moon className="w-5 h-5 text-blue-300" />;
+    }
+  };
+  
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="fixed top-4 right-4 z-50"
-    >
-      <HoverCard>
-        <HoverCardTrigger asChild>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="p-2 rounded-full backdrop-blur-lg bg-white/10 border border-white/20 shadow-lg"
+    <Popover>
+      <PopoverTrigger asChild>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="p-3 rounded-full backdrop-blur-lg glass-button shadow-lg fixed top-4 right-4 z-50"
+        >
+          {getThemeIcon()}
+        </motion.button>
+      </PopoverTrigger>
+      
+      <PopoverContent side="bottom" align="end" className="w-56 p-3 glass-card border-none shadow-lg">
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            variant={theme === 'dark' ? "default" : "outline"}
+            size="lg"
+            onClick={() => handleThemeChange('dark')}
+            className={`flex items-center justify-center gap-2 transition-all ${theme === 'dark' ? 'bg-primary' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
           >
-            {theme === 'dark' && <Moon className="w-5 h-5 text-blue-300" />}
-            {theme === 'light' && <Sun className="w-5 h-5 text-yellow-400" />}
-            {theme === 'pink' && <Flower className="w-5 h-5 text-pink-400" />}
-            {theme === 'purple' && <Sparkles className="w-5 h-5 text-purple-400" />}
-          </motion.button>
-        </HoverCardTrigger>
-        <HoverCardContent side="bottom" className="p-2 backdrop-blur-lg bg-white/10 border border-white/20 shadow-lg">
-          <ToggleGroup type="single" value={theme} onValueChange={(value) => value && setTheme(value as any)}>
-            <ToggleGroupItem value="dark" aria-label="Dark Mode">
-              <Moon className="w-5 h-5 text-blue-300 mr-2" />
-              <span>Dark</span>
-            </ToggleGroupItem>
-            <ToggleGroupItem value="light" aria-label="Light Mode">
-              <Sun className="w-5 h-5 text-yellow-400 mr-2" />
-              <span>Light</span>
-            </ToggleGroupItem>
-            <ToggleGroupItem value="pink" aria-label="Pink Mode">
-              <Flower className="w-5 h-5 text-pink-400 mr-2" />
-              <span>Spring</span>
-            </ToggleGroupItem>
-            <ToggleGroupItem value="purple" aria-label="Purple Mode">
-              <Sparkles className="w-5 h-5 text-purple-400 mr-2" />
-              <span>Cute</span>
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </HoverCardContent>
-      </HoverCard>
-    </motion.div>
+            <Moon className="w-5 h-5 text-blue-300" />
+            <span>Dark</span>
+          </Button>
+          
+          <Button
+            variant={theme === 'light' ? "default" : "outline"}
+            size="lg"
+            onClick={() => handleThemeChange('light')}
+            className={`flex items-center justify-center gap-2 transition-all ${theme === 'light' ? 'bg-primary' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
+          >
+            <Sun className="w-5 h-5 text-yellow-400" />
+            <span>Light</span>
+          </Button>
+          
+          <Button
+            variant={theme === 'pink' ? "default" : "outline"}
+            size="lg"
+            onClick={() => handleThemeChange('pink')}
+            className={`flex items-center justify-center gap-2 transition-all ${theme === 'pink' ? 'bg-primary' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
+          >
+            <Flower className="w-5 h-5 text-pink-400" />
+            <span>Spring</span>
+          </Button>
+          
+          <Button
+            variant={theme === 'purple' ? "default" : "outline"}
+            size="lg"
+            onClick={() => handleThemeChange('purple')}
+            className={`flex items-center justify-center gap-2 transition-all ${theme === 'purple' ? 'bg-primary' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
+          >
+            <Sparkles className="w-5 h-5 text-purple-400" />
+            <span>Cute</span>
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 };
 

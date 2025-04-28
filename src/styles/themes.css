@@ -18,10 +18,15 @@
   --ring: 239 84% 67%;
 
   --gradient-bg: linear-gradient(to bottom right, #111111, #0a0a0a);
-  --card-bg: rgba(255, 255, 255, 0.05);
+  --card-bg: rgba(20, 20, 30, 0.7);
   --card-border: rgba(255, 255, 255, 0.1);
   --card-hover: rgba(255, 255, 255, 0.1);
   --mythic-text-gradient: linear-gradient(to right, #4F46E5, #6366F1);
+  
+  /* Button styling */
+  --button-bg: rgba(30, 30, 40, 0.6);
+  --button-hover: rgba(40, 40, 50, 0.8);
+  --popover-bg: rgba(20, 20, 30, 0.9);
 }
 
 /* Light Theme */
@@ -43,10 +48,15 @@
   --ring: 239 84% 67%;
 
   --gradient-bg: linear-gradient(to bottom right, #ffffff, #f5f5f5);
-  --card-bg: rgba(255, 255, 255, 0.8);
+  --card-bg: rgba(255, 255, 255, 0.85);
   --card-border: rgba(0, 0, 0, 0.1);
   --card-hover: rgba(0, 0, 0, 0.05);
   --mythic-text-gradient: linear-gradient(to right, #4F46E5, #6366F1);
+  
+  /* Button styling */
+  --button-bg: rgba(255, 255, 255, 0.8);
+  --button-hover: rgba(245, 245, 245, 0.9);
+  --popover-bg: rgba(255, 255, 255, 0.95);
 }
 
 /* Pink Spring Theme */
@@ -68,10 +78,15 @@
   --ring: 339 90% 70%;
 
   --gradient-bg: linear-gradient(to bottom right, #fee1e8, #ffc6d3);
-  --card-bg: rgba(255, 255, 255, 0.7);
+  --card-bg: rgba(255, 240, 245, 0.8);
   --card-border: rgba(252, 146, 157, 0.3);
   --card-hover: rgba(252, 146, 157, 0.1);
   --mythic-text-gradient: linear-gradient(to right, #f87171, #ec4899);
+  
+  /* Button styling */
+  --button-bg: rgba(255, 230, 240, 0.8);
+  --button-hover: rgba(255, 210, 220, 0.9);
+  --popover-bg: rgba(255, 240, 245, 0.95);
 }
 
 /* Purple Cute Theme */
@@ -93,29 +108,58 @@
   --ring: 260 84% 67%;
 
   --gradient-bg: linear-gradient(to bottom right, #e0dbff, #d8b4fe);
-  --card-bg: rgba(255, 255, 255, 0.7);
+  --card-bg: rgba(240, 235, 255, 0.8);
   --card-border: rgba(167, 139, 250, 0.3);
   --card-hover: rgba(167, 139, 250, 0.1);
   --mythic-text-gradient: linear-gradient(to right, #F97316, #FBBF24);
+  
+  /* Button styling */
+  --button-bg: rgba(230, 225, 255, 0.8);
+  --button-hover: rgba(215, 205, 255, 0.9);
+  --popover-bg: rgba(240, 235, 255, 0.95);
 }
 
 /* Global styles for all themes */
 body {
   background: var(--gradient-bg);
   background-attachment: fixed;
+  transition: background 0.5s ease-in-out, color 0.5s ease-in-out;
 }
 
+/* Themed components with smooth transitions */
 .card-glass {
   background: var(--card-bg);
   backdrop-filter: blur(10px);
   border: 1px solid var(--card-border);
-  transition: all 0.3s ease;
+  transition: all 0.5s ease-in-out;
 }
 
 .card-glass:hover {
   background: var(--card-hover);
   transform: translateY(-5px);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Glass card used for UI elements */
+.glass-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.5s ease-in-out;
+}
+
+/* Glass button style */
+.glass-button {
+  background: var(--button-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--card-border);
+  transition: all 0.3s ease-in-out;
+}
+
+.glass-button:hover {
+  background: var(--button-hover);
+  transform: translateY(-2px);
 }
 
 /* Animated background patterns */
@@ -126,23 +170,25 @@ body {
   right: 0;
   bottom: 0;
   z-index: -1;
-  opacity: 0.1;
+  opacity: 0.15;
   pointer-events: none;
+  transition: all 0.8s ease-in-out;
 }
 
+/* Specific theme backgrounds */
 .theme-dark .bg-pattern {
   background-image: 
-    radial-gradient(circle at 25% 25%, rgba(100, 100, 255, 0.2) 1%, transparent 8%),
-    radial-gradient(circle at 75% 75%, rgba(100, 100, 255, 0.2) 1%, transparent 8%),
-    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 1%, transparent 8%);
+    radial-gradient(circle at 25% 25%, rgba(100, 100, 255, 0.3) 1%, transparent 8%),
+    radial-gradient(circle at 75% 75%, rgba(100, 100, 255, 0.3) 1%, transparent 8%),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.2) 1%, transparent 8%);
   background-size: 80px 80px;
   animation: moveBackground 120s linear infinite;
 }
 
 .theme-light .bg-pattern {
   background-image: 
-    radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.1) 1%, transparent 8%),
-    radial-gradient(circle at 75% 75%, rgba(59, 130, 246, 0.1) 1%, transparent 8%);
+    radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.15) 1%, transparent 8%),
+    radial-gradient(circle at 75% 75%, rgba(59, 130, 246, 0.15) 1%, transparent 8%);
   background-size: 60px 60px;
   animation: moveBackground 90s linear infinite;
 }
@@ -163,6 +209,12 @@ body {
   animation: floatingHearts 80s linear infinite;
 }
 
+/* Content transitions */
+.content-transition {
+  transition: all 0.5s ease-in-out;
+}
+
+/* Animation keyframes */
 @keyframes moveBackground {
   0% {
     background-position: 0% 0%;
@@ -188,4 +240,11 @@ body {
   100% {
     background-position: 100% 100%, -50% -50%;
   }
+}
+
+/* Transition for all themed elements */
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 0.5s;
+  transition-timing-function: ease-in-out;
 }

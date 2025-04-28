@@ -94,19 +94,14 @@ const GoogleDriveIframe: React.FC<GoogleDriveIframeProps> = ({ folderId }) => {
         animate="visible"
         className="relative z-10"
       >
-        <div className={`p-4 rounded-xl backdrop-blur-md ${
-          theme === 'dark' ? 'bg-gray-800/40 border border-gray-700' : 
-          theme === 'light' ? 'bg-white/70 border border-gray-200' : 
-          theme === 'pink' ? 'bg-pink-50/70 border border-pink-200' : 
-          'bg-purple-50/70 border border-purple-200'
-        }`}>
+        <div className="p-8 rounded-2xl shadow-lg transition-all duration-500 ease-in-out glass-card">
           <iframe 
             src={embedUrl}
             width="100%"
             height="600"
             style={{ border: 0 }}
             allowFullScreen
-            className="rounded-lg"
+            className="rounded-xl transition-all duration-500"
             title="Google Drive Folder"
           ></iframe>
         </div>

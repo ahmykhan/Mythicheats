@@ -25,7 +25,7 @@ const CourseFiles = () => {
         setUserEmail(data.session.user.email);
       } else {
         // For demo purposes, set a default email
-        setUserEmail("user@example.com");
+        setUserEmail("demo@example.com");
       }
     };
 
@@ -46,15 +46,11 @@ const CourseFiles = () => {
   const isAdmin = userEmail === ADMIN_EMAIL;
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden transition-colors duration-300 bg-gradient-to-br from-background to-background/80">
+    <div className="min-h-screen w-full overflow-x-hidden transition-all duration-500 ease-in-out">
       {/* Animated background pattern */}
       <div className="bg-pattern"></div>
       
-      <div className="container mx-auto px-4 py-6">
-        <div className="fixed top-4 right-4 z-50">
-          <ThemeSelector />
-        </div>
-        
+      <div className="container mx-auto px-4 py-6 transition-all duration-500">
         <MythicHeader />
 
         <motion.div
@@ -69,23 +65,23 @@ const CourseFiles = () => {
             value={activeTab}
             onValueChange={setActiveTab}
           >
-            <TabsList className="grid w-full grid-cols-3 mb-8">
+            <TabsList className="grid w-full grid-cols-3 mb-8 glass-card">
               <TabsTrigger 
                 value="materials"
-                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300"
               >
                 Course Materials
               </TabsTrigger>
               <TabsTrigger 
                 value="notifications"
-                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300"
               >
                 <Bell className="mr-2 h-4 w-4" />
                 Notifications
               </TabsTrigger>
               <TabsTrigger 
                 value="settings"
-                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300"
               >
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
@@ -93,86 +89,47 @@ const CourseFiles = () => {
             </TabsList>
 
             <AnimatePresence mode="wait">
-              <TabsContent value="materials" asChild>
+              <TabsContent value="materials" className="content-transition">
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="relative"
+                  transition={{ duration: 0.5 }}
                 >
-                  {/* Decorative elements that go behind the iframe */}
-                  <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-                    <motion.div 
-                      className="absolute -right-20 top-1/4"
-                      initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ opacity: 0.3, scale: 1 }}
-                      transition={{ duration: 1.5 }}
-                    >
-                      {/* Pink theme flowers or purple theme hearts */}
-                      {(() => {
-                        switch (true) {
-                          case document.documentElement.classList.contains('theme-pink'):
-                            return (
-                              <>
-                                {[...Array(5)].map((_, i) => (
-                                  <div key={i} className="text-4xl" style={{ position: 'absolute', transform: `rotate(${i * 72}deg) translateY(-100px)` }}>
-                                    🌸
-                                  </div>
-                                ))}
-                              </>
-                            );
-                          case document.documentElement.classList.contains('theme-purple'):
-                            return (
-                              <>
-                                {[...Array(5)].map((_, i) => (
-                                  <div key={i} className="text-4xl" style={{ position: 'absolute', transform: `rotate(${i * 72}deg) translateY(-100px)` }}>
-                                    💜
-                                  </div>
-                                ))}
-                              </>
-                            );
-                          default:
-                            return null;
-                        }
-                      })()}
-                    </motion.div>
-                  </div>
-                  
                   <GoogleDriveIframe folderId={MAIN_FOLDER_ID} />
                 </motion.div>
               </TabsContent>
 
-              <TabsContent value="notifications" asChild>
+              <TabsContent value="notifications" className="content-transition">
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
+                  transition={{ duration: 0.5 }}
                   className="space-y-4"
                 >
                   {isAdmin ? (
                     <>
-                      <div className="rounded-lg glass-card p-6 backdrop-blur-md bg-white/10 border border-white/20">
+                      <div className="rounded-lg glass-card p-6">
                         <h3 className="text-xl font-bold mb-2">New Course Released!</h3>
                         <p className="text-muted-foreground">Check out the latest course on advanced techniques.</p>
                         <p className="text-xs text-muted-foreground mt-2">2 days ago</p>
                       </div>
                       
-                      <div className="rounded-lg glass-card p-6 backdrop-blur-md bg-white/10 border border-white/20">
+                      <div className="rounded-lg glass-card p-6">
                         <h3 className="text-xl font-bold mb-2">Weekly Challenge</h3>
                         <p className="text-muted-foreground">New weekly challenge available. Test your skills now!</p>
                         <p className="text-xs text-muted-foreground mt-2">5 days ago</p>
                       </div>
                       
-                      <div className="rounded-lg glass-card p-6 backdrop-blur-md bg-white/10 border border-white/20">
+                      <div className="rounded-lg glass-card p-6">
                         <h3 className="text-xl font-bold mb-2">Admin Notice</h3>
                         <p className="text-muted-foreground">Special notifications for admin users only.</p>
                         <p className="text-xs text-muted-foreground mt-2">1 day ago</p>
                       </div>
                     </>
                   ) : (
-                    <div className="rounded-lg glass-card p-6 backdrop-blur-md bg-white/10 border border-white/20">
+                    <div className="rounded-lg glass-card p-6">
                       <h3 className="text-xl font-bold mb-2">No Notifications</h3>
                       <p className="text-muted-foreground">You don't have any notifications at this time.</p>
                     </div>
@@ -180,17 +137,17 @@ const CourseFiles = () => {
                 </motion.div>
               </TabsContent>
 
-              <TabsContent value="settings" asChild>
+              <TabsContent value="settings" className="content-transition">
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
+                  transition={{ duration: 0.5 }}
                   className="space-y-6"
                 >
-                  <div className="rounded-lg glass-card p-6 backdrop-blur-md bg-white/10 border border-white/20">
+                  <div className="rounded-lg glass-card p-6">
                     <h3 className="text-xl font-bold mb-4">Profile Settings</h3>
-                    <p className="mb-4"><strong>Email:</strong> {userEmail || "user@example.com"}</p>
+                    <p className="mb-4"><strong>Email:</strong> {userEmail || "demo@example.com"}</p>
                     
                     <h3 className="text-lg font-bold mb-4 mt-6">Appearance</h3>
                     <p className="mb-2">Change the theme using the selector in the top right corner.</p>
@@ -198,7 +155,7 @@ const CourseFiles = () => {
                     <div className="mt-8">
                       <Button 
                         variant="destructive" 
-                        className="flex items-center"
+                        className="flex items-center transition-all"
                         onClick={handleLogout}
                       >
                         <LogOut className="mr-2 h-4 w-4" />

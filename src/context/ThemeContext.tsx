@@ -18,18 +18,32 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   });
 
   useEffect(() => {
-    // Remove all previous theme classes
-    document.documentElement.classList.remove('theme-dark', 'theme-light', 'theme-pink', 'theme-purple');
-    
-    // Add current theme class
-    document.documentElement.classList.add(`theme-${theme}`);
-    
-    // Save to localStorage
-    localStorage.setItem('theme', theme);
+    // Function to apply theme
+    const applyTheme = (newTheme: ThemeType) => {
+      // Remove all previous theme classes
+      document.documentElement.classList.remove('theme-dark', 'theme-light', 'theme-pink', 'theme-purple');
+      
+      // Add current theme class
+      document.documentElement.classList.add(`theme-${newTheme}`);
+      
+      // Save to localStorage
+      localStorage.setItem('theme', newTheme);
+    };
+
+    // Apply theme with a small delay to ensure smooth transitions
+    const timeoutId = setTimeout(() => {
+      applyTheme(theme);
+    }, 10);
+
+    return () => clearTimeout(timeoutId);
   }, [theme]);
 
+  const handleSetTheme = (newTheme: ThemeType) => {
+    setTheme(newTheme);
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme: handleSetTheme }}>
       {children}
     </ThemeContext.Provider>
   );
