@@ -1,21 +1,20 @@
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import MythicHeader from "@/components/MythicHeader";
-import GoogleDriveIframe from "@/components/drive/GoogleDriveIframe";
+import SubjectManager from "@/components/cms/SubjectManager";
+import SubjectViewer from "@/components/cms/SubjectViewer";
+import EnhancedBackground from "@/components/background/EnhancedBackground";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bell, Settings, LogOut } from "lucide-react";
+import { Bell, Settings, LogOut, FolderCog, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/context/ThemeContext";
-import ThemeSelector from "@/components/theme/ThemeSelector";
 
-const MAIN_FOLDER_ID = "1ubFSKvzW_pprfsMcAKDofmGrPPNkW92e";
 const ADMIN_EMAIL = "furyboy4592@gmail.com";
 
 const CourseFiles = () => {
-  const [activeTab, setActiveTab] = useState("materials");
+  const [activeTab, setActiveTab] = useState("viewer");
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const { toast } = useToast();
   const { theme } = useTheme();
@@ -28,7 +27,7 @@ const CourseFiles = () => {
           setUserEmail(data.session.user.email);
         } else {
           // For demo purposes, set a default email
-          setUserEmail("furyboy4592@gmail.com"); // Changed to match admin email for testing
+          setUserEmail("furyboy4592@gmail.com");
         }
       } catch (error) {
         console.error("Error fetching session:", error);
@@ -37,7 +36,6 @@ const CourseFiles = () => {
     };
 
     getSession();
-    console.log("Current theme:", theme);
   }, [theme]);
 
   const handleLogout = () => {
@@ -45,7 +43,6 @@ const CourseFiles = () => {
       title: "Logging out",
       description: "You have been successfully logged out",
     });
-    // In a real app, you would implement actual logout logic here
     setTimeout(() => {
       window.location.href = "/login";
     }, 1000);
@@ -67,8 +64,10 @@ const CourseFiles = () => {
   };
 
   return (
-    <div className={`min-h-screen w-full overflow-x-hidden transition-all duration-500 ease-in-out theme-${theme}`}>
-      <div className="container mx-auto px-4 py-6 transition-all duration-500">
+    <div className={`min-h-screen w-full overflow-x-hidden transition-all duration-500 ease-in-out theme-${theme} relative`}>
+      <EnhancedBackground />
+      
+      <div className="container mx-auto px-4 py-6 transition-all duration-500 relative z-10">
         <MythicHeader />
 
         <motion.div
@@ -78,19 +77,29 @@ const CourseFiles = () => {
           className="mt-8"
         >
           <Tabs 
-            defaultValue="materials" 
+            defaultValue="viewer" 
             className="w-full"
             value={activeTab}
             onValueChange={setActiveTab}
           >
             <div className="glass-card rounded-2xl p-2 mb-8 shadow-md">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger 
-                  value="materials"
+                  value="viewer"
                   className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300"
                 >
+                  <Eye className="mr-2 h-4 w-4" />
                   Course Materials
                 </TabsTrigger>
+                {isAdmin && (
+                  <TabsTrigger 
+                    value="manager"
+                    className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300"
+                  >
+                    <FolderCog className="mr-2 h-4 w-4" />
+                    Subject Manager
+                  </TabsTrigger>
+                )}
                 <TabsTrigger 
                   value="notifications"
                   className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300"
@@ -109,7 +118,7 @@ const CourseFiles = () => {
             </div>
 
             <AnimatePresence mode="wait">
-              <TabsContent value="materials" className="content-transition">
+              <TabsContent value="viewer" className="content-transition">
                 <motion.div
                   variants={containerVariants}
                   initial="hidden"
@@ -117,9 +126,23 @@ const CourseFiles = () => {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <GoogleDriveIframe folderId={MAIN_FOLDER_ID} />
+                  <SubjectViewer isAdmin={isAdmin} />
                 </motion.div>
               </TabsContent>
+
+              {isAdmin && (
+                <TabsContent value="manager" className="content-transition">
+                  <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <SubjectManager />
+                  </motion.div>
+                </TabsContent>
+              )}
 
               <TabsContent value="notifications" className="content-transition">
                 <motion.div
@@ -131,6 +154,24 @@ const CourseFiles = () => {
                 >
                   {isAdmin ? (
                     <>
+                      <motion.div 
+                        variants={itemVariants} 
+                        className="rounded-lg glass-card p-6"
+                      >
+                        <h3 className="text-xl font-bold mb-2">CMS System Updated!</h3>
+                        <p className="text-muted-foreground">New hierarchical subject management system is now available.</p>
+                        <p className="text-xs text-muted-foreground mt-2">Today</p>
+                      </motion.div>
+                      
+                      <motion.div 
+                        variants={itemVariants} 
+                        className="rounded-lg glass-card p-6"
+                      >
+                        <h3 className="text-xl font-bold mb-2">Enhanced UI</h3>
+                        <p className="text-muted-foreground">Beautiful new background animations and improved visual design.</p>
+                        <p className="text-xs text-muted-foreground mt-2">1 hour ago</p>
+                      </motion.div>
+                      
                       <motion.div 
                         variants={itemVariants} 
                         className="rounded-lg glass-card p-6"
@@ -163,8 +204,8 @@ const CourseFiles = () => {
                       variants={itemVariants} 
                       className="rounded-lg glass-card p-6"
                     >
-                      <h3 className="text-xl font-bold mb-2">No Notifications</h3>
-                      <p className="text-muted-foreground">You don't have any notifications at this time.</p>
+                      <h3 className="text-xl font-bold mb-2">Welcome to the Course Portal</h3>
+                      <p className="text-muted-foreground">Access your course materials through the organized subject hierarchy.</p>
                     </motion.div>
                   )}
                 </motion.div>
@@ -184,10 +225,20 @@ const CourseFiles = () => {
                   >
                     <h3 className="text-xl font-bold mb-4">Profile Settings</h3>
                     <p className="mb-4"><strong>Email:</strong> {userEmail || "loading..."}</p>
+                    <p className="mb-4"><strong>Role:</strong> {isAdmin ? "Administrator" : "Student"}</p>
                     
                     <h3 className="text-lg font-bold mb-4 mt-6">Appearance</h3>
                     <p className="mb-2">Current theme: <span className="font-semibold capitalize">{theme}</span></p>
                     <p className="mb-4">Use the theme selector in the top right corner to change the site's appearance.</p>
+                    
+                    {isAdmin && (
+                      <>
+                        <h3 className="text-lg font-bold mb-4 mt-6">Admin Features</h3>
+                        <p className="mb-2">• Subject Manager: Create and organize course subjects</p>
+                        <p className="mb-2">• Hierarchical Folders: Manage subfolders within subjects</p>
+                        <p className="mb-4">• Google Drive Integration: Link folders to Drive content</p>
+                      </>
+                    )}
                     
                     <div className="mt-8">
                       <Button 
