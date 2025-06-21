@@ -10,7 +10,6 @@ import {
   Shield,
   Settings,
   X,
-  FolderOpen,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -24,7 +23,6 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const isMobile = useIsMobile();
 
   const handleLogout = () => {
-    // TODO: Implement logout logic
     navigate("/login");
   };
 
@@ -81,14 +79,6 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           >
             <BookOpen className="mr-2 h-4 w-4" />
             Manage Courses
-          </Button>
-          <Button
-            variant="ghost"
-            className="w-full justify-start"
-            onClick={() => navigate("/admin/files")}
-          >
-            <FolderOpen className="mr-2 h-4 w-4" />
-            Course Files
           </Button>
           <Button
             variant="ghost"

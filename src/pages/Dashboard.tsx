@@ -23,7 +23,7 @@ const Dashboard = () => {
         if (error) throw error;
         
         setCourses(data || []);
-      } catch (error) {
+      } catch (error) => {
         console.error("Error fetching courses:", error);
         // Fallback to sample courses if there's an error
         setCourses([
@@ -102,7 +102,7 @@ const Dashboard = () => {
           ) : (
             courses.map((course) => (
               <motion.div key={course.id} variants={itemVariants}>
-                <Link to={course.isLocked ? "#" : `/admin/files`}>
+                <Link to={course.isLocked ? "#" : `/admin/courses`}>
                   <Card
                     className={`p-6 hover:shadow-lg transition-shadow cursor-pointer glass-card ${
                       course.isLocked ? "opacity-80" : ""

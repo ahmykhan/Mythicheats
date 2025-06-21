@@ -11,12 +11,13 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
 import Notifications from "./pages/Notifications";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 // Admin pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManageNotifications from "./pages/admin/ManageNotifications";
 import AdminSettings from "./pages/admin/AdminSettings";
-import CourseFiles from "./pages/admin/CourseFiles";
+import ManageCourses from "./pages/admin/ManageCourses";
 
 const queryClient = new QueryClient();
 
@@ -37,11 +38,27 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/notifications" element={<Notifications />} />
               
-              {/* Admin Routes */}
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/notifications" element={<ManageNotifications />} />
-              <Route path="/admin/settings" element={<AdminSettings />} />
-              <Route path="/admin/files" element={<CourseFiles />} />
+              {/* Protected Admin Routes */}
+              <Route path="/admin" element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/courses" element={
+                <ProtectedRoute>
+                  <ManageCourses />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/notifications" element={
+                <ProtectedRoute>
+                  <ManageNotifications />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/settings" element={
+                <ProtectedRoute>
+                  <AdminSettings />
+                </ProtectedRoute>
+              } />
               
               <Route path="*" element={<NotFound />} />
             </Routes>
