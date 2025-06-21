@@ -1,9 +1,8 @@
-
-/* Dark Theme - Default */
+/* Dark Theme - Black Background */
 .theme-dark {
-  --background: 222 47% 11%;
+  --background: 0 0% 0%;
   --foreground: 210 40% 98%;
-  --card: 222 47% 8%;
+  --card: 0 0% 5%;
   --card-foreground: 210 40% 98%;
   --border: 217 33% 17%;
   --input: 217 33% 17%;
@@ -17,24 +16,24 @@
   --destructive-foreground: 210 40% 98%;
   --ring: 239 84% 67%;
 
-  --gradient-bg: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #533483 100%);
-  --card-bg: rgba(15, 15, 25, 0.85);
+  --gradient-bg: linear-gradient(135deg, #000000 0%, #0a0a0a 25%, #1a1a1a 50%, #0f0f0f 75%, #000000 100%);
+  --card-bg: rgba(0, 0, 0, 0.85);
   --card-border: rgba(255, 255, 255, 0.15);
   --card-hover: rgba(255, 255, 255, 0.1);
   --mythic-text-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   
-  --button-bg: rgba(30, 30, 50, 0.7);
-  --button-hover: rgba(50, 50, 80, 0.9);
-  --popover-bg: rgba(20, 20, 35, 0.95);
+  --button-bg: rgba(10, 10, 10, 0.7);
+  --button-hover: rgba(30, 30, 30, 0.9);
+  --popover-bg: rgba(0, 0, 0, 0.95);
   
-  --iframe-bg: rgba(10, 10, 20, 0.6);
+  --iframe-bg: rgba(0, 0, 0, 0.6);
   --iframe-border: rgba(80, 80, 120, 0.4);
   
   --glow-primary: 0 0 20px rgba(102, 126, 234, 0.3);
   --glow-secondary: 0 0 15px rgba(118, 75, 162, 0.2);
 }
 
-/* Light Theme */
+/* Light Theme - White Background */
 .theme-light {
   --background: 0 0% 100%;
   --foreground: 222 47% 11%;
@@ -52,28 +51,28 @@
   --destructive-foreground: 210 40% 98%;
   --ring: 239 84% 67%;
 
-  --gradient-bg: linear-gradient(135deg, #ffffff 0%, #f8fafc 25%, #e2e8f0 50%, #cbd5e1 75%, #94a3b8 100%);
+  --gradient-bg: linear-gradient(135deg, #ffffff 0%, #ffffff 25%, #f8f9fa 50%, #f1f3f4 75%, #ffffff 100%);
   --card-bg: rgba(255, 255, 255, 0.9);
   --card-border: rgba(0, 0, 0, 0.08);
   --card-hover: rgba(0, 0, 0, 0.04);
   --mythic-text-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   
-  --button-bg: rgba(248, 250, 252, 0.8);
-  --button-hover: rgba(241, 245, 249, 0.95);
+  --button-bg: rgba(255, 255, 255, 0.8);
+  --button-hover: rgba(248, 249, 250, 0.95);
   --popover-bg: rgba(255, 255, 255, 0.98);
   
-  --iframe-bg: rgba(248, 250, 252, 0.7);
+  --iframe-bg: rgba(255, 255, 255, 0.7);
   --iframe-border: rgba(203, 213, 225, 0.5);
   
   --glow-primary: 0 0 15px rgba(79, 70, 229, 0.2);
   --glow-secondary: 0 0 10px rgba(124, 58, 237, 0.15);
 }
 
-/* Pink Spring Theme */
+/* Pink Spring Theme - Pink Background */
 .theme-pink {
-  --background: 350 100% 98%;
+  --background: 320 100% 95%;
   --foreground: 222 47% 11%;
-  --card: 0 0% 100%;
+  --card: 320 100% 98%;
   --card-foreground: 222 47% 11%;
   --border: 350 100% 88%;
   --input: 350 100% 88%;
@@ -87,28 +86,28 @@
   --destructive-foreground: 210 40% 98%;
   --ring: 339 90% 70%;
 
-  --gradient-bg: linear-gradient(135deg, #fff0f3 0%, #ffe4e6 25%, #fecdd3 50%, #fda4af 75%, #fb7185 100%);
-  --card-bg: rgba(255, 240, 245, 0.9);
+  --gradient-bg: linear-gradient(135deg, #ffc0cb 0%, #ffb6c1 25%, #ffa0b4 50%, #ff91a4 75%, #ff8fa3 100%);
+  --card-bg: rgba(255, 192, 203, 0.9);
   --card-border: rgba(252, 165, 165, 0.3);
   --card-hover: rgba(252, 165, 165, 0.15);
   --mythic-text-gradient: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
   
-  --button-bg: rgba(255, 228, 230, 0.8);
-  --button-hover: rgba(254, 205, 211, 0.9);
-  --popover-bg: rgba(255, 240, 245, 0.98);
+  --button-bg: rgba(255, 182, 193, 0.8);
+  --button-hover: rgba(255, 160, 180, 0.9);
+  --popover-bg: rgba(255, 192, 203, 0.98);
   
-  --iframe-bg: rgba(255, 236, 241, 0.8);
+  --iframe-bg: rgba(255, 192, 203, 0.8);
   --iframe-border: rgba(251, 182, 206, 0.4);
   
   --glow-primary: 0 0 20px rgba(236, 72, 153, 0.3);
   --glow-secondary: 0 0 15px rgba(244, 63, 94, 0.2);
 }
 
-/* Purple Cute Theme */
+/* Purple Cute Theme - Purple Background */
 .theme-purple {
-  --background: 260 100% 98%;
+  --background: 260 100% 90%;
   --foreground: 222 47% 11%;
-  --card: 0 0% 100%;
+  --card: 260 100% 95%;
   --card-foreground: 222 47% 11%;
   --border: 260 100% 88%;
   --input: 260 100% 88%;
@@ -122,17 +121,17 @@
   --destructive-foreground: 210 40% 98%;
   --ring: 260 84% 67%;
 
-  --gradient-bg: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 25%, #d1d5db 50%, #a78bfa 75%, #8b5cf6 100%);
-  --card-bg: rgba(245, 240, 255, 0.9);
+  --gradient-bg: linear-gradient(135deg, #dda0dd 0%, #d8bfd8 25%, #da70d6 50%, #ba55d3 75%, #9370db 100%);
+  --card-bg: rgba(221, 160, 221, 0.9);
   --card-border: rgba(196, 181, 253, 0.3);
   --card-hover: rgba(196, 181, 253, 0.15);
   --mythic-text-gradient: linear-gradient(135deg, #F97316 0%, #FBBF24 50%, #F59E0B 100%);
   
-  --button-bg: rgba(237, 233, 254, 0.8);
-  --button-hover: rgba(221, 214, 254, 0.9);
-  --popover-bg: rgba(245, 240, 255, 0.98);
+  --button-bg: rgba(221, 160, 221, 0.8);
+  --button-hover: rgba(186, 85, 211, 0.9);
+  --popover-bg: rgba(221, 160, 221, 0.98);
   
-  --iframe-bg: rgba(240, 235, 255, 0.8);
+  --iframe-bg: rgba(221, 160, 221, 0.8);
   --iframe-border: rgba(196, 181, 253, 0.4);
   
   --glow-primary: 0 0 25px rgba(249, 115, 22, 0.4);
@@ -252,6 +251,7 @@ body::before {
     conic-gradient(from 0deg at 50% 50%, rgba(168, 85, 247, 0.2) 0deg, transparent 60deg, rgba(59, 130, 246, 0.2) 120deg, transparent 180deg);
   background-size: 120px 120px, 80px 80px, 200px 200px;
   animation: cosmicDance 30s linear infinite;
+  background-color: rgba(0, 0, 0, 0.3);
 }
 
 .theme-light .bg-pattern {
@@ -261,15 +261,17 @@ body::before {
     linear-gradient(45deg, rgba(59, 130, 246, 0.05) 25%, transparent 25%);
   background-size: 100px 100px, 150px 150px, 60px 60px;
   animation: gentleFlow 25s linear infinite;
+  background-color: rgba(255, 255, 255, 0.8);
 }
 
 .theme-pink .bg-pattern {
   background-image: 
-    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23fda4af' fill-opacity='0.3'%3E%3Cpath d='M20 20c0-5.5-4.5-10-10-10s-10 4.5-10 10 4.5 10 10 10 10-4.5 10-10zm10 0c0-5.5-4.5-10-10-10s-10 4.5-10 10 4.5 10 10 10 10-4.5 10-10z'/%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23fda4af' fill-opacity='0.3'%3E%3Cpath d='M20 20c0-5.5-4.5-10-10-10s-10 4.5-10 10 4.5 10 10 10 10-4.5 10-10z'/%3E%3C/g%3E%3C/svg%3E"),
     radial-gradient(circle at 20% 80%, rgba(251, 113, 133, 0.3) 0%, transparent 40%),
     radial-gradient(circle at 80% 20%, rgba(244, 63, 94, 0.2) 0%, transparent 40%);
   background-size: 80px 80px, 200px 200px, 150px 150px;
   animation: bloomingFlowers 40s ease-in-out infinite;
+  background-color: rgba(255, 192, 203, 0.5);
 }
 
 .theme-purple .bg-pattern {
@@ -279,6 +281,7 @@ body::before {
     linear-gradient(135deg, rgba(196, 181, 253, 0.1) 0%, transparent 50%);
   background-size: 150px 150px, 200px 200px, 100px 100px;
   animation: mysticAura 35s ease-in-out infinite;
+  background-color: rgba(221, 160, 221, 0.6);
 }
 
 /* Enhanced iframe styling */
