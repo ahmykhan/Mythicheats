@@ -23,7 +23,7 @@ const Dashboard = () => {
         if (error) throw error;
         
         setCourses(data || []);
-      } catch (error) => {
+      } catch (error) {
         console.error("Error fetching courses:", error);
         // Fallback to sample courses if there's an error
         setCourses([
