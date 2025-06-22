@@ -130,7 +130,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-purple-50 to-pink-100">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -139,8 +139,10 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
       >
         <Card className="p-8 shadow-lg">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-blue-600 mb-2">StudyHub</h1>
-            <p className="text-gray-600">Your study companion</p>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+              Mythic Cheats
+            </h1>
+            <p className="text-gray-600">Ultimate study companion</p>
           </div>
 
           <Tabs value={mode} onValueChange={(value) => setMode(value as 'signin' | 'signup')}>
@@ -181,7 +183,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700" disabled={loading}>
                   {loading ? "Signing In..." : "Sign In"}
                 </Button>
               </form>
@@ -238,7 +240,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700" disabled={loading}>
                   {loading ? "Creating Account..." : "Create Account"}
                 </Button>
               </form>

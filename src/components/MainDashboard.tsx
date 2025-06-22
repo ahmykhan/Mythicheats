@@ -4,20 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { 
-  Home, 
+  BookOpen, 
   MessageCircle, 
   LogOut, 
   Bell, 
   Download, 
   User, 
-  Settings,
-  BookOpen,
-  Plus,
-  Edit,
-  Trash2
+  Settings
 } from "lucide-react";
 import ContentViewer from "./content/ContentViewer";
 import ChatRoom from "./chat/ChatRoom";
@@ -63,7 +58,7 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ username, userEmail, onLo
     if (outcome === 'accepted') {
       toast({
         title: "App Installed!",
-        description: "StudyHub has been installed on your device"
+        description: "Mythic Cheats has been installed on your device"
       });
     }
     
@@ -92,7 +87,9 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ username, userEmail, onLo
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-blue-600">StudyHub</h1>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Mythic Cheats
+              </h1>
               {isAdmin && (
                 <span className="ml-2 px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
                   Admin
@@ -148,7 +145,7 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ username, userEmail, onLo
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 max-w-2xl mx-auto">
+          <TabsList className="grid w-full grid-cols-4 max-w-2xl mx-auto">
             <TabsTrigger value="courses" className="flex items-center gap-2">
               <BookOpen className="h-4 w-4" />
               Courses
@@ -164,10 +161,6 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ username, userEmail, onLo
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
               Settings
-            </TabsTrigger>
-            <TabsTrigger value="profile" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              Profile
             </TabsTrigger>
           </TabsList>
 
@@ -214,16 +207,6 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ username, userEmail, onLo
               <ProfileSettings username={username} userEmail={userEmail} />
             </motion.div>
           </TabsContent>
-
-          <TabsContent value="profile">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <ProfileSettings username={username} userEmail={userEmail} />
-            </motion.div>
-          </TabsContent>
         </Tabs>
 
         {/* PWA Install Card for Mobile */}
@@ -233,10 +216,10 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ username, userEmail, onLo
             animate={{ opacity: 1, y: 0 }}
             className="fixed bottom-4 left-4 right-4 sm:hidden z-50"
           >
-            <Card className="p-4 bg-blue-600 text-white">
+            <Card className="p-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-semibold">Install StudyHub</h3>
+                  <h3 className="font-semibold">Install Mythic Cheats</h3>
                   <p className="text-sm opacity-90">Get the full app experience</p>
                 </div>
                 <Button

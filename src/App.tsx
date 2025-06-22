@@ -8,19 +8,11 @@ import ThemeSelector from "@/components/theme/ThemeSelector";
 import EnhancedBackground from "@/components/background/EnhancedBackground";
 import PWAApp from "@/components/PWAApp";
 
-// Admin pages (kept for admin functionality)
-import Login from "./pages/Login";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import ManageNotifications from "./pages/admin/ManageNotifications";
-import AdminSettings from "./pages/admin/AdminSettings";
-import ManageCourses from "./pages/admin/ManageCourses";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, //  5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes (renamed from cacheTime)
+      gcTime: 10 * 60 * 1000, // 10 minutes
     },
   },
 });
@@ -36,34 +28,8 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              {/* Main PWA route - this is the primary app */}
-              <Route path="/" element={<PWAApp />} />
-              
-              {/* Legacy admin routes (separate from main app) */}
-              <Route path="/admin/login" element={<Login />} />
-              <Route path="/admin" element={
-                <ProtectedRoute>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/courses" element={
-                <ProtectedRoute>
-                  <ManageCourses />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/notifications" element={
-                <ProtectedRoute>
-                  <ManageNotifications />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/settings" element={
-                <ProtectedRoute>
-                  <AdminSettings />
-                </ProtectedRoute>
-              } />
-              
-              {/* Fallback to main app */}
-              <Route path="*" element={<PWAApp />} />
+              {/* Single main route for the PWA app */}
+              <Route path="/*" element={<PWAApp />} />
             </Routes>
           </BrowserRouter>
         </div>

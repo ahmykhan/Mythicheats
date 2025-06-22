@@ -1,11 +1,11 @@
 
 {
-  "name": "Past Papers & Notes Platform",
-  "short_name": "StudyHub",
-  "description": "Access past papers, notes, and chat with fellow students",
+  "name": "Mythic Cheats - Ultimate Study Platform",
+  "short_name": "Mythic Cheats",
+  "description": "Access courses, chat, and study materials with fellow students",
   "start_url": "/",
   "display": "standalone",
-  "theme_color": "#3b82f6",
+  "theme_color": "#9333ea",
   "background_color": "#ffffff",
   "orientation": "portrait-primary",
   "icons": [
