@@ -36,11 +36,10 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              {/* Main PWA route */}
+              {/* Main PWA route - this is the primary app */}
               <Route path="/" element={<PWAApp />} />
-              <Route path="/pwa" element={<PWAApp />} />
               
-              {/* Admin routes */}
+              {/* Legacy admin routes (separate from main app) */}
               <Route path="/admin/login" element={<Login />} />
               <Route path="/admin" element={
                 <ProtectedRoute>

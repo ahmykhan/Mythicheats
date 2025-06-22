@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import AuthPage from "./auth/AuthPage";
-import UnifiedDashboard from "./UnifiedDashboard";
+import MainDashboard from "./MainDashboard";
 import UsernameSetup from "./auth/UsernameSetup";
 
 const PWAApp: React.FC = () => {
@@ -143,8 +143,9 @@ const PWAApp: React.FC = () => {
   }
 
   return (
-    <UnifiedDashboard
+    <MainDashboard
       username={username}
+      userEmail={user.email}
       onLogout={handleLogout}
     />
   );
