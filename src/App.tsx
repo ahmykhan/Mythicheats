@@ -1,25 +1,29 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/context/ThemeContext";
 import ThemeSelector from "@/components/theme/ThemeSelector";
 import EnhancedBackground from "@/components/background/EnhancedBackground";
 import PWAApp from "@/components/PWAApp";
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import NotFound from "./pages/NotFound";
-import ResetPassword from "./pages/ResetPassword";
-import Notifications from "./pages/Notifications";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
 
-// Admin pages
+// Admin pages (kept for admin functionality)
+import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManageNotifications from "./pages/admin/ManageNotifications";
 import AdminSettings from "./pages/admin/AdminSettings";
 import ManageCourses from "./pages/admin/ManageCourses";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, //  5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -32,15 +36,12 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
+              {/* Main PWA route */}
               <Route path="/" element={<PWAApp />} />
               <Route path="/pwa" element={<PWAApp />} />
               
-              <Route path="/login" element={<Login />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/notifications" element={<Notifications />} />
-              
-              {/* Protected Admin Routes */}
+              {/* Admin routes */}
+              <Route path="/admin/login" element={<Login />} />
               <Route path="/admin" element={
                 <ProtectedRoute>
                   <AdminDashboard />
@@ -62,7 +63,8 @@ const App = () => (
                 </ProtectedRoute>
               } />
               
-              <Route path="*" element={<NotFound />} />
+              {/* Fallback to main app */}
+              <Route path="*" element={<PWAApp />} />
             </Routes>
           </BrowserRouter>
         </div>

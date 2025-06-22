@@ -2,43 +2,71 @@
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import GoogleAuth from "./auth/GoogleAuth";
-import AppLayout from "./layout/AppLayout";
-import ContentViewer from "./content/ContentViewer";
-import ChatRoom from "./chat/ChatRoom";
+import AuthPage from "./auth/AuthPage";
+import UnifiedDashboard from "./UnifiedDashboard";
+import UsernameSetup from "./auth/UsernameSetup";
 
 const PWAApp: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [username, setUsername] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState<'home' | 'chat'>('home');
   const [loading, setLoading] = useState(true);
+  const [needsUsername, setNeedsUsername] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     checkUser();
     registerServiceWorker();
     requestNotificationPermission();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user) {
+          setUser(session.user);
+          await checkUsername(session.user.id);
+        } else {
+          setUser(null);
+          setUsername("");
+          setNeedsUsername(false);
+        }
+        setLoading(false);
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const checkUser = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data: usernameData } = await supabase
-          .from("usernames")
-          .select("username")
-          .eq("user_id", user.id)
-          .single();
-
-        if (usernameData?.username) {
-          setUser(user);
-          setUsername(usernameData.username);
-        }
+        setUser(user);
+        await checkUsername(user.id);
       }
     } catch (error) {
       console.error("Error checking user:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkUsername = async (userId: string) => {
+    try {
+      const { data: usernameData } = await supabase
+        .from("usernames")
+        .select("username")
+        .eq("user_id", userId)
+        .single();
+
+      if (usernameData?.username) {
+        setUsername(usernameData.username);
+        setNeedsUsername(false);
+      } else {
+        setNeedsUsername(true);
+      }
+    } catch (error) {
+      console.error("Error checking username:", error);
+      setNeedsUsername(true);
     }
   };
 
@@ -62,9 +90,19 @@ const PWAApp: React.FC = () => {
   const handleAuthSuccess = (user: any, username: string) => {
     setUser(user);
     setUsername(username);
+    setNeedsUsername(false);
     toast({
       title: "Welcome!",
       description: `Logged in as ${username}`
+    });
+  };
+
+  const handleUsernameSet = (username: string) => {
+    setUsername(username);
+    setNeedsUsername(false);
+    toast({
+      title: "Username set successfully!",
+      description: `Welcome, ${username}!`
     });
   };
 
@@ -73,6 +111,7 @@ const PWAApp: React.FC = () => {
       await supabase.auth.signOut();
       setUser(null);
       setUsername("");
+      setNeedsUsername(false);
       toast({
         title: "Logged out",
         description: "You have been successfully logged out"
@@ -90,20 +129,24 @@ const PWAApp: React.FC = () => {
     );
   }
 
-  if (!user || !username) {
-    return <GoogleAuth onAuthSuccess={handleAuthSuccess} />;
+  if (!user) {
+    return <AuthPage onAuthSuccess={handleAuthSuccess} />;
+  }
+
+  if (needsUsername) {
+    return (
+      <UsernameSetup 
+        onUsernameSet={handleUsernameSet}
+        userEmail={user.email}
+      />
+    );
   }
 
   return (
-    <AppLayout
-      currentPage={currentPage}
-      onPageChange={setCurrentPage}
-      onLogout={handleLogout}
+    <UnifiedDashboard
       username={username}
-    >
-      {currentPage === 'home' && <ContentViewer />}
-      {currentPage === 'chat' && <ChatRoom currentUsername={username} />}
-    </AppLayout>
+      onLogout={handleLogout}
+    />
   );
 };
 

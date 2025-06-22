@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,8 +10,8 @@ interface ContentItem {
   id: string;
   type: 'section' | 'folder' | 'file';
   title: string;
-  link?: string;
-  parent_section?: string;
+  link?: string | null;
+  parent_section?: string | null;
   order_index: number;
 }
 
@@ -34,7 +33,18 @@ const ContentViewer: React.FC = () => {
         .order("order_index", { ascending: true });
 
       if (error) throw error;
-      setContent(data || []);
+      
+      // Map the data to ensure type safety
+      const mappedData: ContentItem[] = (data || []).map(item => ({
+        id: item.id,
+        type: item.type as 'section' | 'folder' | 'file',
+        title: item.title,
+        link: item.link,
+        parent_section: item.parent_section,
+        order_index: item.order_index
+      }));
+      
+      setContent(mappedData);
     } catch (error) {
       console.error("Error fetching content:", error);
       toast({
@@ -60,7 +70,6 @@ const ContentViewer: React.FC = () => {
   const handleDownload = (link: string, title: string) => {
     if (!link) return;
     
-    // Open link in new tab for download
     window.open(link, '_blank');
     
     toast({
