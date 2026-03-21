@@ -13,9 +13,9 @@ interface Course {
   id: string;
   title: string;
   description: string | null;
-  files_count: number;
-  is_locked: boolean;
+  is_locked: boolean | null;
   created_at: string | null;
+  updated_at: string | null;
 }
 
 const AdminCourseManager: React.FC = () => {
