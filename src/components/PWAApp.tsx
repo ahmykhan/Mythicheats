@@ -24,6 +24,20 @@ const PWAApp: React.FC = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (session?.user) {
+          const email = session.user.email || "";
+          if (!email.endsWith(ALLOWED_DOMAIN)) {
+            await supabase.auth.signOut();
+            setUser(null);
+            setUsername("");
+            setNeedsUsername(false);
+            toast({
+              title: "Access Denied",
+              description: "Access restricted to university student emails only (@lhr.nu.edu.pk).",
+              variant: "destructive"
+            });
+            setLoading(false);
+            return;
+          }
           setUser(session.user);
           await checkUsername(session.user.id);
         } else {
