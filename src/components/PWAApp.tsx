@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+
+const ALLOWED_DOMAIN = "@lhr.nu.edu.pk";
 import AuthPage from "./auth/AuthPage";
 import MainDashboard from "./MainDashboard";
 import UsernameSetup from "./auth/UsernameSetup";
@@ -22,6 +24,20 @@ const PWAApp: React.FC = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (session?.user) {
+          const email = session.user.email || "";
+          if (!email.endsWith(ALLOWED_DOMAIN)) {
+            await supabase.auth.signOut();
+            setUser(null);
+            setUsername("");
+            setNeedsUsername(false);
+            toast({
+              title: "Access Denied",
+              description: "Access restricted to university student emails only (@lhr.nu.edu.pk).",
+              variant: "destructive"
+            });
+            setLoading(false);
+            return;
+          }
           setUser(session.user);
           await checkUsername(session.user.id);
         } else {
@@ -40,6 +56,17 @@ const PWAApp: React.FC = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        const email = user.email || "";
+        if (!email.endsWith(ALLOWED_DOMAIN)) {
+          await supabase.auth.signOut();
+          toast({
+            title: "Access Denied",
+            description: "Access restricted to university student emails only (@lhr.nu.edu.pk).",
+            variant: "destructive"
+          });
+          setLoading(false);
+          return;
+        }
         setUser(user);
         await checkUsername(user.id);
       }

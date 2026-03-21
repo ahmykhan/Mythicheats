@@ -28,7 +28,17 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
 
     try {
       if (mode === 'signup') {
-        // Sign up new user
+        // Check domain before signup
+        if (!email.endsWith('@lhr.nu.edu.pk')) {
+          toast({
+            title: "Access Denied",
+            description: "Access restricted to university student emails only (@lhr.nu.edu.pk).",
+            variant: "destructive"
+          });
+          setLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -62,7 +72,18 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
         if (error) throw error;
 
         if (data.user) {
-          // Check if user has username
+          const email = data.user.email || "";
+          if (!email.endsWith('@lhr.nu.edu.pk')) {
+            await supabase.auth.signOut();
+            toast({
+              title: "Access Denied",
+              description: "Access restricted to university student emails only (@lhr.nu.edu.pk).",
+              variant: "destructive"
+            });
+            setLoading(false);
+            return;
+          }
+
           const { data: usernameData } = await supabase
             .from("usernames")
             .select("username")
@@ -72,7 +93,6 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
           if (usernameData?.username) {
             onAuthSuccess(data.user, usernameData.username);
           } else {
-            // Redirect to username setup
             toast({
               title: "Username required",
               description: "Please set up your username to continue."
@@ -96,7 +116,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
     setLoading(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin
+        redirect_uri: window.location.origin,
+        extraParams: {
+          hd: "lhr.nu.edu.pk",
+          prompt: "select_account"
+        }
       });
 
       if (result.error) throw result.error;
