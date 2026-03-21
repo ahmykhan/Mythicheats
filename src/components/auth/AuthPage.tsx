@@ -211,6 +211,12 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
                   </div>
                 </div>
 
+                <div className="flex justify-end">
+                  <Button type="button" variant="link" className="text-xs px-0" onClick={handleForgotPassword}>
+                    Forgot password?
+                  </Button>
+                </div>
+
                 <Button type="submit" className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700" disabled={loading}>
                   {loading ? "Signing In..." : "Sign In"}
                 </Button>
