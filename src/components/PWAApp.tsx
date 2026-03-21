@@ -79,11 +79,17 @@ const PWAApp: React.FC = () => {
 
   const checkUsername = async (userId: string) => {
     try {
-      const { data: usernameData } = await supabase
+      const { data: usernameData, error } = await supabase
         .from("usernames")
         .select("username")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error checking username:", error);
+        setNeedsUsername(true);
+        return;
+      }
 
       if (usernameData?.username) {
         setUsername(usernameData.username);
