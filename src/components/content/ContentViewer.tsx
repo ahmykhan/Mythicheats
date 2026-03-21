@@ -29,20 +29,25 @@ const ContentViewer: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from("google_sheets_data")
-        .select("*")
-        .order("order_index", { ascending: true });
+        .select("*");
 
       if (error) throw error;
       
-      // Map the data to ensure type safety
-      const mappedData: ContentItem[] = (data || []).map(item => ({
-        id: item.id,
-        type: item.type as 'section' | 'folder' | 'file',
-        title: item.title,
-        link: item.link,
-        parent_section: item.parent_section,
-        order_index: item.order_index
-      }));
+      // Map the data from JSONB
+      const mappedData: ContentItem[] = (data || []).flatMap(item => {
+        const jsonData = item.data as any;
+        if (Array.isArray(jsonData)) {
+          return jsonData.map((entry: any, idx: number) => ({
+            id: `${item.id}-${idx}`,
+            type: (entry.type || 'file') as 'section' | 'folder' | 'file',
+            title: entry.title || 'Untitled',
+            link: entry.link || null,
+            parent_section: entry.parent_section || null,
+            order_index: entry.order_index || idx
+          }));
+        }
+        return [];
+      });
       
       setContent(mappedData);
     } catch (error) {

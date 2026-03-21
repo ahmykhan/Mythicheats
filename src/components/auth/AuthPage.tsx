@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 import { motion } from "framer-motion";
 import { Mail, Lock, User } from "lucide-react";
 
@@ -94,14 +95,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
   const handleGoogleAuth = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin
-        }
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin
       });
 
-      if (error) throw error;
+      if (result.error) throw result.error;
     } catch (error: any) {
       console.error("Google auth error:", error);
       toast({
@@ -109,6 +107,36 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
         description: "Failed to authenticate with Google. Please try again.",
         variant: "destructive"
       });
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email address first.",
+        variant: "destructive"
+      });
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+      if (error) throw error;
+      toast({
+        title: "Reset link sent",
+        description: "Check your email for a password reset link."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send reset link.",
+        variant: "destructive"
+      });
+    } finally {
       setLoading(false);
     }
   };
@@ -181,6 +209,12 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
                       required
                     />
                   </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <Button type="button" variant="link" className="text-xs px-0" onClick={handleForgotPassword}>
+                    Forgot password?
+                  </Button>
                 </div>
 
                 <Button type="submit" className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700" disabled={loading}>
