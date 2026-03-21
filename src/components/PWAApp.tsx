@@ -56,6 +56,17 @@ const PWAApp: React.FC = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        const email = user.email || "";
+        if (!email.endsWith(ALLOWED_DOMAIN)) {
+          await supabase.auth.signOut();
+          toast({
+            title: "Access Denied",
+            description: "Access restricted to university student emails only (@lhr.nu.edu.pk).",
+            variant: "destructive"
+          });
+          setLoading(false);
+          return;
+        }
         setUser(user);
         await checkUsername(user.id);
       }
