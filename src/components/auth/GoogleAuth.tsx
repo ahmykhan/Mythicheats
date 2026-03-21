@@ -48,14 +48,11 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ onAuthSuccess }) => {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin
-        }
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin
       });
 
-      if (error) throw error;
+      if (result.error) throw result.error;
     } catch (error) {
       console.error("Error with Google login:", error);
       toast({
