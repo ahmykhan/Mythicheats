@@ -72,7 +72,18 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
         if (error) throw error;
 
         if (data.user) {
-          // Check if user has username
+          const email = data.user.email || "";
+          if (!email.endsWith('@lhr.nu.edu.pk')) {
+            await supabase.auth.signOut();
+            toast({
+              title: "Access Denied",
+              description: "Access restricted to university student emails only (@lhr.nu.edu.pk).",
+              variant: "destructive"
+            });
+            setLoading(false);
+            return;
+          }
+
           const { data: usernameData } = await supabase
             .from("usernames")
             .select("username")
@@ -82,7 +93,6 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
           if (usernameData?.username) {
             onAuthSuccess(data.user, usernameData.username);
           } else {
-            // Redirect to username setup
             toast({
               title: "Username required",
               description: "Please set up your username to continue."
