@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+
+const ALLOWED_DOMAIN = "@lhr.nu.edu.pk";
 import AuthPage from "./auth/AuthPage";
 import MainDashboard from "./MainDashboard";
 import UsernameSetup from "./auth/UsernameSetup";
