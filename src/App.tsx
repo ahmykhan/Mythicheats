@@ -29,6 +29,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
+              <Route path="/reset-password" element={<ResetPassword />} />
               {/* Single main route for the PWA app */}
               <Route path="/*" element={<PWAApp />} />
             </Routes>
