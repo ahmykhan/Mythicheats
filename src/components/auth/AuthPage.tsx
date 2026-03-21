@@ -116,7 +116,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
     setLoading(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin
+        redirect_uri: window.location.origin,
+        extraParams: {
+          hd: "lhr.nu.edu.pk",
+          prompt: "select_account"
+        }
       });
 
       if (result.error) throw result.error;
