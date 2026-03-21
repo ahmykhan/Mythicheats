@@ -28,7 +28,17 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
 
     try {
       if (mode === 'signup') {
-        // Sign up new user
+        // Check domain before signup
+        if (!email.endsWith('@lhr.nu.edu.pk')) {
+          toast({
+            title: "Access Denied",
+            description: "Access restricted to university student emails only (@lhr.nu.edu.pk).",
+            variant: "destructive"
+          });
+          setLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
