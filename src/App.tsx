@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import ThemeSelector from "@/components/theme/ThemeSelector";
 import EnhancedBackground from "@/components/background/EnhancedBackground";
 import PWAApp from "@/components/PWAApp";
+import ResetPassword from "@/pages/ResetPassword";
 
 const queryClient = new QueryClient({
   defaultOptions: {
