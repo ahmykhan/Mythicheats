@@ -302,8 +302,8 @@ const AdminCourseManager: React.FC = () => {
                 <p className="text-gray-600 text-sm mb-3">{course.description}</p>
               )}
               <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-500">
-                  {course.files_count || 0} files
+                <span className="text-xs text-muted-foreground">
+                  Created {course.created_at ? new Date(course.created_at).toLocaleDateString() : 'N/A'}
                 </span>
                 <Button
                   variant={course.is_locked ? "default" : "outline"}

@@ -95,14 +95,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
   const handleGoogleAuth = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin
-        }
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin
       });
 
-      if (error) throw error;
+      if (result.error) throw result.error;
     } catch (error: any) {
       console.error("Google auth error:", error);
       toast({
@@ -110,6 +107,36 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
         description: "Failed to authenticate with Google. Please try again.",
         variant: "destructive"
       });
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email address first.",
+        variant: "destructive"
+      });
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+      if (error) throw error;
+      toast({
+        title: "Reset link sent",
+        description: "Check your email for a password reset link."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send reset link.",
+        variant: "destructive"
+      });
+    } finally {
       setLoading(false);
     }
   };
