@@ -24,7 +24,7 @@ const App = () => (
       <div className="relative min-h-screen">
         <EnhancedBackground />
         <div className="relative z-10">
-          <ThemeSelector />
+          
           <Toaster />
           <Sonner />
           <BrowserRouter>

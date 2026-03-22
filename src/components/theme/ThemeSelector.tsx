@@ -36,7 +36,7 @@ const ThemeSelector: React.FC = () => {
   };
   
   return (
-    <div className="fixed top-4 right-4 z-[9999]">
+    <div className="relative inline-block">
       <Popover>
         <PopoverTrigger asChild>
           <motion.button
