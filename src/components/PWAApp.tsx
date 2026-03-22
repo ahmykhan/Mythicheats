@@ -4,9 +4,15 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 const ALLOWED_DOMAIN = "@lhr.nu.edu.pk";
+const ADMIN_EMAIL = "furyboy4592@gmail.com";
+
 import AuthPage from "./auth/AuthPage";
 import MainDashboard from "./MainDashboard";
 import UsernameSetup from "./auth/UsernameSetup";
+
+const isAllowedEmail = (email: string) => {
+  return email.endsWith(ALLOWED_DOMAIN) || email === ADMIN_EMAIL;
+};
 
 const PWAApp: React.FC = () => {
   const [user, setUser] = useState<any>(null);
@@ -20,26 +26,29 @@ const PWAApp: React.FC = () => {
     registerServiceWorker();
     requestNotificationPermission();
 
-    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (session?.user) {
           const email = session.user.email || "";
-          if (!email.endsWith(ALLOWED_DOMAIN)) {
-            await supabase.auth.signOut();
-            setUser(null);
-            setUsername("");
-            setNeedsUsername(false);
-            toast({
-              title: "Access Denied",
-              description: "Access restricted to university student emails only (@lhr.nu.edu.pk).",
-              variant: "destructive"
-            });
+          if (!isAllowedEmail(email)) {
+            // Use setTimeout to avoid deadlock in auth listener
+            setTimeout(async () => {
+              await supabase.auth.signOut();
+              setUser(null);
+              setUsername("");
+              setNeedsUsername(false);
+              toast({
+                title: "Access Denied",
+                description: "Access restricted to lhr.nu.edu.pk accounts only.",
+                variant: "destructive"
+              });
+            }, 0);
             setLoading(false);
             return;
           }
           setUser(session.user);
-          await checkUsername(session.user.id);
+          // Auto-create username from Google metadata on first login
+          setTimeout(() => checkAndSetUsername(session.user), 0);
         } else {
           setUser(null);
           setUsername("");
@@ -57,18 +66,18 @@ const PWAApp: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const email = user.email || "";
-        if (!email.endsWith(ALLOWED_DOMAIN)) {
+        if (!isAllowedEmail(email)) {
           await supabase.auth.signOut();
           toast({
             title: "Access Denied",
-            description: "Access restricted to university student emails only (@lhr.nu.edu.pk).",
+            description: "Access restricted to lhr.nu.edu.pk accounts only.",
             variant: "destructive"
           });
           setLoading(false);
           return;
         }
         setUser(user);
-        await checkUsername(user.id);
+        await checkAndSetUsername(user);
       }
     } catch (error) {
       console.error("Error checking user:", error);
@@ -77,12 +86,12 @@ const PWAApp: React.FC = () => {
     }
   };
 
-  const checkUsername = async (userId: string) => {
+  const checkAndSetUsername = async (user: any) => {
     try {
       const { data: usernameData, error } = await supabase
         .from("usernames")
         .select("username")
-        .eq("user_id", userId)
+        .eq("user_id", user.id)
         .maybeSingle();
 
       if (error) {
@@ -95,6 +104,24 @@ const PWAApp: React.FC = () => {
         setUsername(usernameData.username);
         setNeedsUsername(false);
       } else {
+        // Try to auto-set username from Google metadata
+        const googleName = user.user_metadata?.full_name || user.user_metadata?.name;
+        if (googleName) {
+          // Create a username from the Google name (remove spaces, lowercase)
+          const autoUsername = googleName.replace(/\s+/g, '_').toLowerCase().replace(/[^a-z0-9_]/g, '').substring(0, 30);
+          if (autoUsername.length >= 3) {
+            const { error: insertError } = await supabase
+              .from("usernames")
+              .insert({ user_id: user.id, username: autoUsername });
+            
+            if (!insertError) {
+              setUsername(autoUsername);
+              setNeedsUsername(false);
+              return;
+            }
+            // If username taken (duplicate), fall through to manual setup
+          }
+        }
         setNeedsUsername(true);
       }
     } catch (error) {
@@ -107,7 +134,6 @@ const PWAApp: React.FC = () => {
     if ('serviceWorker' in navigator) {
       try {
         await navigator.serviceWorker.register('/sw.js');
-        console.log('Service Worker registered successfully');
       } catch (error) {
         console.error('Service Worker registration failed:', error);
       }
