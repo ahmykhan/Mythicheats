@@ -121,11 +121,9 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({ username, userEmail }
       <Card className="p-6">
         <h2 className="text-lg font-semibold mb-4">Theme Settings</h2>
         <p className="text-sm text-gray-600 mb-4">
-          Choose your preferred theme. The theme selector is available in the top-right corner.
+          Choose your preferred theme.
         </p>
-        <div className="flex justify-center">
-          <ThemeSelector />
-        </div>
+        <ThemeSelector />
       </Card>
 
       {/* App Information */}

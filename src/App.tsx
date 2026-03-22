@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/context/ThemeContext";
-import ThemeSelector from "@/components/theme/ThemeSelector";
+
 import EnhancedBackground from "@/components/background/EnhancedBackground";
 import PWAApp from "@/components/PWAApp";
 import ResetPassword from "@/pages/ResetPassword";
@@ -24,7 +24,7 @@ const App = () => (
       <div className="relative min-h-screen">
         <EnhancedBackground />
         <div className="relative z-10">
-          <ThemeSelector />
+          
           <Toaster />
           <Sonner />
           <BrowserRouter>
