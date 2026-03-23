@@ -1,69 +1,61 @@
-# Welcome to your Lovable project
+# MythicHeats – University Submission
 
-## Project info
+## Project Structure
 
-**URL**: https://lovable.dev/projects/2d69c1a2-4987-4d28-8fa1-dedcf06f8d98
+```
+├── backend/          → Backend logic (Supabase Edge Functions, config, migrations)
+│   └── supabase/
+├── database/         → Database schema (schema.sql with all table definitions & RLS policies)
+├── docs/             → Documentation (Word files, reports – uploaded manually)
+├── src/              → Frontend source code (React + TypeScript)
+├── public/           → Static assets
+├── package.json      → Frontend dependencies
+└── README.md         → This file
+```
 
-## How can I edit this code?
+> **Note for TA:** The root directory serves as the **Frontend** folder for deployment purposes.
+> The React app runs directly from the project root. Please `cd .` (stay in root) to run the frontend.
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/2d69c1a2-4987-4d28-8fa1-dedcf06f8d98) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+## How to Run the Frontend
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# 1. Install dependencies
+npm install
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# 2. Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The app will be available at `http://localhost:5173`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Tech Stack
 
-**Use GitHub Codespaces**
+| Layer      | Technology                          |
+|------------|-------------------------------------|
+| Frontend   | React, TypeScript, Vite, Tailwind CSS, shadcn/ui |
+| Backend    | Supabase (Edge Functions, Auth, RLS) |
+| Database   | PostgreSQL (hosted via Supabase)     |
+| Auth       | Google OAuth (restricted to @lhr.nu.edu.pk) |
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Backend
 
-## What technologies are used for this project?
+The `backend/supabase/` folder contains:
+- **Edge Functions** – Serverless functions (e.g., Google Sheets sync)
+- **Migrations** – SQL migration files for database schema changes
+- **config.toml** – Supabase project configuration
 
-This project is built with .
+## Database
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+The `database/schema.sql` file contains the complete database schema including:
+- All table definitions (usernames, chat_messages, courses, notifications, google_sheets_data)
+- Row-Level Security (RLS) policies for each table
 
-## How can I deploy this project?
+## Authentication
 
-Simply open [Lovable](https://lovable.dev/projects/2d69c1a2-4987-4d28-8fa1-dedcf06f8d98) and click on Share -> Publish.
+- Google OAuth login restricted to `@lhr.nu.edu.pk` domain
+- Admin bypass for designated owner email
+- Auto-generated usernames from Google metadata + roll number
 
-## I want to use a custom domain - is that possible?
+## Live Deployment
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+- **URL:** https://mythicheats.lovable.app
