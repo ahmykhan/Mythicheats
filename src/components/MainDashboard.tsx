@@ -15,7 +15,7 @@ import {
   Settings
 } from "lucide-react";
 import ContentViewer from "./content/ContentViewer";
-import ChatRoom from "./chat/ChatRoom";
+import ChatContainer from "./chat/ChatContainer";
 import NotificationCenter from "./notifications/NotificationCenter";
 import ProfileSettings from "./profile/ProfileSettings";
 import AdminCourseManager from "./admin/AdminCourseManager";
