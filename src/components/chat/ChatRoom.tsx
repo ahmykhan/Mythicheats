@@ -223,6 +223,17 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, r
           <Send className="h-4 w-4" />
         </Button>
       </form>
+
+      {roomType === "group" && (
+        <GroupInfoModal
+          open={showGroupInfo}
+          onOpenChange={setShowGroupInfo}
+          roomId={roomId}
+          roomName={roomName}
+          joinCode={joinCode || null}
+          roomType={roomType}
+        />
+      )}
     </div>
   );
 };
