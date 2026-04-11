@@ -169,7 +169,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, r
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="bg-orange-500 hover:bg-orange-600 text-white rounded-full w-6 h-6 p-0"
+                      className="bg-amber-500 hover:bg-amber-600 text-white rounded-full w-6 h-6 p-0"
                       onClick={() => reportMessage(msg.id)}
                       title="Report message"
                     >
