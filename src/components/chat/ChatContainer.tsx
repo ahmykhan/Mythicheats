@@ -57,6 +57,8 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ currentUsername, isAdmin 
             isAdmin={isAdmin}
             roomId={selectedRoom.id}
             roomName={selectedRoom.name}
+            joinCode={selectedRoom.join_code}
+            roomType={selectedRoom.type}
           />
         ) : (
           <div className="flex items-center justify-center h-full text-muted-foreground">

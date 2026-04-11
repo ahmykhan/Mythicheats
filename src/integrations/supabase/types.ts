@@ -184,18 +184,21 @@ export type Database = {
         Row: {
           id: string
           joined_at: string
+          role: string
           room_id: string
           user_id: string
         }
         Insert: {
           id?: string
           joined_at?: string
+          role?: string
           room_id: string
           user_id: string
         }
         Update: {
           id?: string
           joined_at?: string
+          role?: string
           room_id?: string
           user_id?: string
         }
@@ -212,19 +215,25 @@ export type Database = {
       usernames: {
         Row: {
           created_at: string
+          enrolled_courses: string[] | null
           id: string
+          section: string | null
           user_id: string
           username: string
         }
         Insert: {
           created_at?: string
+          enrolled_courses?: string[] | null
           id?: string
+          section?: string | null
           user_id: string
           username: string
         }
         Update: {
           created_at?: string
+          enrolled_courses?: string[] | null
           id?: string
+          section?: string | null
           user_id?: string
           username?: string
         }

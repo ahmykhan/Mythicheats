@@ -8,6 +8,8 @@ CREATE TABLE public.usernames (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL,
     username TEXT NOT NULL,
+    section TEXT,
+    enrolled_courses TEXT[] DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
@@ -26,6 +28,7 @@ CREATE TABLE public.room_participants (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     room_id UUID NOT NULL REFERENCES public.chat_rooms(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    role TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('admin', 'member')),
     joined_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     UNIQUE(room_id, user_id)
 );

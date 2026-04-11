@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Trash2, Flag } from "lucide-react";
+import { Send, Trash2, Flag, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import GroupInfoModal from "./GroupInfoModal";
 
 interface ChatMessage {
   id: string;
@@ -19,12 +20,15 @@ interface ChatRoomProps {
   isAdmin?: boolean;
   roomId: string;
   roomName: string;
+  joinCode?: string | null;
+  roomType?: string;
 }
 
-const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, roomId, roomName }) => {
+const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, roomId, roomName, joinCode, roomType }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [showGroupInfo, setShowGroupInfo] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -136,9 +140,16 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, r
     <div className="flex flex-col h-full">
       <div className="flex justify-between items-center p-4 border-b">
         <h2 className="text-lg font-semibold">{roomName}</h2>
-        {isAdmin && (
-          <span className="px-2 py-1 bg-destructive/10 text-destructive text-xs rounded-full">Admin</span>
-        )}
+        <div className="flex items-center gap-2">
+          {roomType === "group" && (
+            <Button variant="ghost" size="sm" onClick={() => setShowGroupInfo(true)}>
+              <Info className="h-4 w-4 mr-1" /> Info
+            </Button>
+          )}
+          {isAdmin && (
+            <span className="px-2 py-1 bg-destructive/10 text-destructive text-xs rounded-full">Admin</span>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -212,6 +223,17 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, r
           <Send className="h-4 w-4" />
         </Button>
       </form>
+
+      {roomType === "group" && (
+        <GroupInfoModal
+          open={showGroupInfo}
+          onOpenChange={setShowGroupInfo}
+          roomId={roomId}
+          roomName={roomName}
+          joinCode={joinCode || null}
+          roomType={roomType}
+        />
+      )}
     </div>
   );
 };
