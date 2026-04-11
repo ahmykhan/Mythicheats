@@ -19,12 +19,15 @@ interface ChatRoomProps {
   isAdmin?: boolean;
   roomId: string;
   roomName: string;
+  joinCode?: string | null;
+  roomType?: string;
 }
 
-const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, roomId, roomName }) => {
+const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, roomId, roomName, joinCode, roomType }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [showGroupInfo, setShowGroupInfo] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
