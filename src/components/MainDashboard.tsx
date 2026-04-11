@@ -15,7 +15,7 @@ import {
   Settings
 } from "lucide-react";
 import ContentViewer from "./content/ContentViewer";
-import ChatRoom from "./chat/ChatRoom";
+import ChatContainer from "./chat/ChatContainer";
 import NotificationCenter from "./notifications/NotificationCenter";
 import ProfileSettings from "./profile/ProfileSettings";
 import AdminCourseManager from "./admin/AdminCourseManager";
@@ -184,7 +184,7 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ username, userEmail, onLo
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <ChatRoom currentUsername={username} isAdmin={isAdmin} />
+              <ChatContainer currentUsername={username} isAdmin={isAdmin} />
             </motion.div>
           </TabsContent>
 
