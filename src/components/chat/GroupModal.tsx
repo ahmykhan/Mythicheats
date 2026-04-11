@@ -42,8 +42,8 @@ const GroupModal: React.FC<GroupModalProps> = ({ open, onOpenChange, defaultTab 
 
       if (error) throw error;
 
-      // Add creator as participant
-      await supabase.from("room_participants").insert({ room_id: room.id, user_id: user.id });
+      // Add creator as participant with admin role
+      await supabase.from("room_participants").insert({ room_id: room.id, user_id: user.id, role: "admin" });
 
       toast({
         title: "Group Created!",
