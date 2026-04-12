@@ -81,7 +81,7 @@ CREATE TABLE public.google_sheets_data (
 );
 
 -- =============================================
--- Admin Helper Function
+-- Helper Functions
 -- =============================================
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS boolean
@@ -92,6 +92,17 @@ AS $$
     SELECT 1 FROM auth.users
     WHERE id = auth.uid()
     AND email = 'furyboy4592@gmail.com'
+  )
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_room_member(_user_id uuid, _room_id uuid)
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.room_participants
+    WHERE user_id = _user_id AND room_id = _room_id
   )
 $$;
 
@@ -112,7 +123,8 @@ CREATE POLICY "Authenticated users can create rooms" ON public.chat_rooms FOR IN
 
 -- room_participants
 ALTER TABLE public.room_participants ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Anyone can read room participants" ON public.room_participants FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Users can read participants of their rooms" ON public.room_participants FOR SELECT TO authenticated
+  USING (public.is_room_member(auth.uid(), room_id));
 CREATE POLICY "Users can join rooms" ON public.room_participants FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Admins can kick members" ON public.room_participants FOR DELETE TO authenticated
   USING (auth.uid() = user_id OR EXISTS (
