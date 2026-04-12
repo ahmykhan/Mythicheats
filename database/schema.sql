@@ -81,6 +81,21 @@ CREATE TABLE public.google_sheets_data (
 );
 
 -- =============================================
+-- Admin Helper Function
+-- =============================================
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM auth.users
+    WHERE id = auth.uid()
+    AND email = 'furyboy4592@gmail.com'
+  )
+$$;
+
+-- =============================================
 -- Row-Level Security (RLS) Policies
 -- =============================================
 
@@ -97,13 +112,21 @@ CREATE POLICY "Authenticated users can create rooms" ON public.chat_rooms FOR IN
 
 -- room_participants
 ALTER TABLE public.room_participants ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can see their own participations" ON public.room_participants FOR SELECT TO authenticated USING (auth.uid() = user_id);
+CREATE POLICY "Anyone can read room participants" ON public.room_participants FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Users can join rooms" ON public.room_participants FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can leave rooms" ON public.room_participants FOR DELETE TO authenticated USING (auth.uid() = user_id);
+CREATE POLICY "Admins can kick members" ON public.room_participants FOR DELETE TO authenticated
+  USING (auth.uid() = user_id OR EXISTS (
+    SELECT 1 FROM room_participants rp
+    WHERE rp.room_id = room_participants.room_id AND rp.user_id = auth.uid() AND rp.role = 'admin'
+  ));
 
 -- chat_messages
 ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Anyone can read chat messages" ON public.chat_messages FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Room members can read messages" ON public.chat_messages FOR SELECT TO authenticated
+  USING (
+    EXISTS (SELECT 1 FROM public.chat_rooms WHERE chat_rooms.id = chat_messages.room_id AND chat_rooms.type = 'global')
+    OR EXISTS (SELECT 1 FROM public.room_participants WHERE room_participants.room_id = chat_messages.room_id AND room_participants.user_id = auth.uid())
+  );
 CREATE POLICY "Users can insert own messages" ON public.chat_messages FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can delete own messages" ON public.chat_messages FOR DELETE TO authenticated USING (auth.uid() = user_id);
 
@@ -115,16 +138,16 @@ CREATE POLICY "Users can see their own reports" ON public.reports FOR SELECT TO 
 -- courses
 ALTER TABLE public.courses ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Anyone can read courses" ON public.courses FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Anyone can insert courses" ON public.courses FOR INSERT TO authenticated WITH CHECK (true);
-CREATE POLICY "Anyone can update courses" ON public.courses FOR UPDATE TO authenticated USING (true);
-CREATE POLICY "Anyone can delete courses" ON public.courses FOR DELETE TO authenticated USING (true);
+CREATE POLICY "Admins can insert courses" ON public.courses FOR INSERT TO authenticated WITH CHECK (public.is_admin());
+CREATE POLICY "Admins can update courses" ON public.courses FOR UPDATE TO authenticated USING (public.is_admin());
+CREATE POLICY "Admins can delete courses" ON public.courses FOR DELETE TO authenticated USING (public.is_admin());
 
 -- notifications
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Anyone can read notifications" ON public.notifications FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Anyone can insert notifications" ON public.notifications FOR INSERT TO authenticated WITH CHECK (true);
-CREATE POLICY "Anyone can update notifications" ON public.notifications FOR UPDATE TO authenticated USING (true);
-CREATE POLICY "Anyone can delete notifications" ON public.notifications FOR DELETE TO authenticated USING (true);
+CREATE POLICY "Admins can insert notifications" ON public.notifications FOR INSERT TO authenticated WITH CHECK (public.is_admin());
+CREATE POLICY "Admins can update notifications" ON public.notifications FOR UPDATE TO authenticated USING (public.is_admin());
+CREATE POLICY "Admins can delete notifications" ON public.notifications FOR DELETE TO authenticated USING (public.is_admin());
 
 -- google_sheets_data
 ALTER TABLE public.google_sheets_data ENABLE ROW LEVEL SECURITY;
