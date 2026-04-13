@@ -10,6 +10,7 @@ CREATE TABLE public.usernames (
     username TEXT NOT NULL,
     section TEXT,
     enrolled_courses TEXT[] DEFAULT '{}',
+    has_registered_courses BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
@@ -17,7 +18,7 @@ CREATE TABLE public.usernames (
 CREATE TABLE public.chat_rooms (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
-    type TEXT NOT NULL DEFAULT 'group' CHECK (type IN ('global', 'group', 'dm')),
+    type TEXT NOT NULL DEFAULT 'group' CHECK (type IN ('global', 'group', 'dm', 'section', 'course')),
     join_code TEXT UNIQUE,
     created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
@@ -77,6 +78,20 @@ CREATE TABLE public.google_sheets_data (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     sheet_id TEXT,
     data JSONB,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+-- Table: valid_sections
+CREATE TABLE public.valid_sections (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL UNIQUE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+-- Table: valid_courses
+CREATE TABLE public.valid_courses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL UNIQUE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
@@ -164,6 +179,20 @@ CREATE POLICY "Admins can delete notifications" ON public.notifications FOR DELE
 -- google_sheets_data
 ALTER TABLE public.google_sheets_data ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Anyone can read sheets data" ON public.google_sheets_data FOR SELECT TO authenticated USING (true);
+
+-- valid_sections
+ALTER TABLE public.valid_sections ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can read sections" ON public.valid_sections FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Admins can insert sections" ON public.valid_sections FOR INSERT TO authenticated WITH CHECK (public.is_admin());
+CREATE POLICY "Admins can update sections" ON public.valid_sections FOR UPDATE TO authenticated USING (public.is_admin());
+CREATE POLICY "Admins can delete sections" ON public.valid_sections FOR DELETE TO authenticated USING (public.is_admin());
+
+-- valid_courses
+ALTER TABLE public.valid_courses ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can read valid courses" ON public.valid_courses FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Admins can insert valid courses" ON public.valid_courses FOR INSERT TO authenticated WITH CHECK (public.is_admin());
+CREATE POLICY "Admins can update valid courses" ON public.valid_courses FOR UPDATE TO authenticated USING (public.is_admin());
+CREATE POLICY "Admins can delete valid courses" ON public.valid_courses FOR DELETE TO authenticated USING (public.is_admin());
 
 -- =============================================
 -- Realtime
