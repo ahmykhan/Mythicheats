@@ -10,6 +10,7 @@ CREATE TABLE public.usernames (
     username TEXT NOT NULL,
     section TEXT,
     enrolled_courses TEXT[] DEFAULT '{}',
+    has_registered_courses BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
@@ -17,7 +18,7 @@ CREATE TABLE public.usernames (
 CREATE TABLE public.chat_rooms (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
-    type TEXT NOT NULL DEFAULT 'group' CHECK (type IN ('global', 'group', 'dm')),
+    type TEXT NOT NULL DEFAULT 'group' CHECK (type IN ('global', 'group', 'dm', 'section', 'course')),
     join_code TEXT UNIQUE,
     created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
