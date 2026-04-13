@@ -180,6 +180,20 @@ CREATE POLICY "Admins can delete notifications" ON public.notifications FOR DELE
 ALTER TABLE public.google_sheets_data ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Anyone can read sheets data" ON public.google_sheets_data FOR SELECT TO authenticated USING (true);
 
+-- valid_sections
+ALTER TABLE public.valid_sections ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can read sections" ON public.valid_sections FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Admins can insert sections" ON public.valid_sections FOR INSERT TO authenticated WITH CHECK (public.is_admin());
+CREATE POLICY "Admins can update sections" ON public.valid_sections FOR UPDATE TO authenticated USING (public.is_admin());
+CREATE POLICY "Admins can delete sections" ON public.valid_sections FOR DELETE TO authenticated USING (public.is_admin());
+
+-- valid_courses
+ALTER TABLE public.valid_courses ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can read valid courses" ON public.valid_courses FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Admins can insert valid courses" ON public.valid_courses FOR INSERT TO authenticated WITH CHECK (public.is_admin());
+CREATE POLICY "Admins can update valid courses" ON public.valid_courses FOR UPDATE TO authenticated USING (public.is_admin());
+CREATE POLICY "Admins can delete valid courses" ON public.valid_courses FOR DELETE TO authenticated USING (public.is_admin());
+
 -- =============================================
 -- Realtime
 -- =============================================
