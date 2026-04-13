@@ -59,6 +59,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ currentUsername, isAdmin 
             roomName={selectedRoom.name}
             joinCode={selectedRoom.join_code}
             roomType={selectedRoom.type}
+            onNavigateToRoom={(room) => setSelectedRoom(room)}
           />
         ) : (
           <div className="flex items-center justify-center h-full text-muted-foreground">

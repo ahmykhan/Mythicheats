@@ -1,14 +1,21 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Trash2, Flag, Info } from "lucide-react";
+import { Send, Trash2, Flag, Info, MessageSquarePlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import GroupInfoModal from "./GroupInfoModal";
+import { startDM } from "./NewDMSearch";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface ChatMessage {
   id: string;
+  user_id: string;
   username: string;
   message: string;
   created_at: string;
@@ -22,15 +29,18 @@ interface ChatRoomProps {
   roomName: string;
   joinCode?: string | null;
   roomType?: string;
+  onNavigateToRoom?: (room: { id: string; name: string; type: string; join_code: string | null }) => void;
 }
 
-const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, roomId, roomName, joinCode, roomType }) => {
+const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, roomId, roomName, joinCode, roomType, onNavigateToRoom }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [showGroupInfo, setShowGroupInfo] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  const isOfficialRoom = roomType === "section" || roomType === "course";
 
   useEffect(() => {
     setMessages([]);
@@ -133,20 +143,36 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, r
     }
   };
 
+  const handleStartDM = async (userId: string, username: string) => {
+    try {
+      const room = await startDM(userId, username);
+      if (room && onNavigateToRoom) {
+        onNavigateToRoom(room);
+      }
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
   const formatTime = (ts: string) =>
     new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+  // Show info button for group, section, and course rooms
+  const showInfoButton = roomType === "group" || isOfficialRoom;
+  // Show admin controls only in non-official rooms when user is admin
+  const showAdminControls = isAdmin && !isOfficialRoom;
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex justify-between items-center p-4 border-b">
         <h2 className="text-lg font-semibold">{roomName}</h2>
         <div className="flex items-center gap-2">
-          {roomType === "group" && (
+          {showInfoButton && (
             <Button variant="ghost" size="sm" onClick={() => setShowGroupInfo(true)}>
               <Info className="h-4 w-4 mr-1" /> Info
             </Button>
           )}
-          {isAdmin && (
+          {showAdminControls && (
             <span className="px-2 py-1 bg-destructive/10 text-destructive text-xs rounded-full">Admin</span>
           )}
         </div>
@@ -154,53 +180,70 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, r
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         <AnimatePresence>
-          {messages.map((msg) => (
-            <motion.div
-              key={msg.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`flex ${msg.username === currentUsername ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg relative group ${
-                  msg.username === currentUsername
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-foreground"
-                }`}
+          {messages.map((msg) => {
+            const isOwn = msg.username === currentUsername;
+            return (
+              <motion.div
+                key={msg.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
               >
-                {msg.username !== currentUsername && (
-                  <p className="text-xs font-semibold mb-1 opacity-70">{msg.username}</p>
-                )}
-                <p className="text-sm">{msg.message}</p>
-                <p className="text-xs mt-1 opacity-60">{formatTime(msg.created_at)}</p>
+                <div
+                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg relative group ${
+                    isOwn ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+                  }`}
+                >
+                  {!isOwn && (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button className="text-xs font-semibold mb-1 opacity-70 hover:opacity-100 cursor-pointer">
+                          {msg.username}
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-2" side="top">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs h-7"
+                          onClick={() => handleStartDM(msg.user_id, msg.username)}
+                        >
+                          <MessageSquarePlus className="h-3 w-3 mr-1" /> Start DM
+                        </Button>
+                      </PopoverContent>
+                    </Popover>
+                  )}
+                  <p className="text-sm">{msg.message}</p>
+                  <p className="text-xs mt-1 opacity-60">{formatTime(msg.created_at)}</p>
 
-                {/* Action buttons on hover */}
-                <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                  {msg.username !== currentUsername && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="bg-amber-500 hover:bg-amber-600 text-white rounded-full w-6 h-6 p-0"
-                      onClick={() => reportMessage(msg.id)}
-                      title="Report message"
-                    >
-                      <Flag className="h-3 w-3" />
-                    </Button>
-                  )}
-                  {isAdmin && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-full w-6 h-6 p-0"
-                      onClick={() => deleteMessage(msg.id)}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  )}
+                  {/* Action buttons on hover */}
+                  <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                    {!isOwn && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="bg-amber-500 hover:bg-amber-600 text-white rounded-full w-6 h-6 p-0"
+                        onClick={() => reportMessage(msg.id)}
+                        title="Report message"
+                      >
+                        <Flag className="h-3 w-3" />
+                      </Button>
+                    )}
+                    {showAdminControls && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-full w-6 h-6 p-0"
+                        onClick={() => deleteMessage(msg.id)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </AnimatePresence>
         <div ref={messagesEndRef} />
       </div>
@@ -224,14 +267,14 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, r
         </Button>
       </form>
 
-      {roomType === "group" && (
+      {showInfoButton && (
         <GroupInfoModal
           open={showGroupInfo}
           onOpenChange={setShowGroupInfo}
           roomId={roomId}
           roomName={roomName}
           joinCode={joinCode || null}
-          roomType={roomType}
+          roomType={roomType || "group"}
         />
       )}
     </div>

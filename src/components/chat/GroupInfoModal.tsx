@@ -46,6 +46,8 @@ const GroupInfoModal: React.FC<GroupInfoModalProps> = ({
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  const isOfficialRoom = roomType === "section" || roomType === "course";
+
   useEffect(() => {
     if (open) {
       fetchCurrentUser();
@@ -69,7 +71,6 @@ const GroupInfoModal: React.FC<GroupInfoModalProps> = ({
 
     if (!parts) return;
 
-    // Fetch usernames for all participants
     const userIds = parts.map((p) => p.user_id);
     const { data: usernames } = await supabase
       .from("usernames")
@@ -152,18 +153,23 @@ const GroupInfoModal: React.FC<GroupInfoModalProps> = ({
     }
   };
 
+  // In official rooms, hide admin controls (kick, add member) for non-admins
+  const showAdminActions = isCurrentUserAdmin && !isOfficialRoom;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{roomName}</DialogTitle>
           <DialogDescription>
-            {roomType === "group" ? "Group info and members" : "Room information"}
+            {isOfficialRoom
+              ? `${roomType === "section" ? "Section" : "Course"} group — members are auto-assigned`
+              : "Group info and members"}
           </DialogDescription>
         </DialogHeader>
 
-        {/* Join Code Section */}
-        {joinCode && (
+        {/* Join Code Section — only for user-created groups */}
+        {joinCode && !isOfficialRoom && (
           <div className="flex items-center gap-2 p-3 rounded-lg bg-muted">
             <div className="flex-1">
               <p className="text-xs text-muted-foreground mb-1">Join Code</p>
@@ -195,7 +201,7 @@ const GroupInfoModal: React.FC<GroupInfoModalProps> = ({
                       </Badge>
                     )}
                   </div>
-                  {isCurrentUserAdmin && p.user_id !== currentUserId && p.role !== "admin" && (
+                  {showAdminActions && p.user_id !== currentUserId && p.role !== "admin" && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -211,8 +217,8 @@ const GroupInfoModal: React.FC<GroupInfoModalProps> = ({
           </ScrollArea>
         </div>
 
-        {/* Add Member (Admin only) */}
-        {isCurrentUserAdmin && (
+        {/* Add Member (Admin only, non-official rooms) */}
+        {showAdminActions && (
           <div>
             <p className="text-sm font-medium mb-2">Add Member</p>
             <div className="flex gap-2">

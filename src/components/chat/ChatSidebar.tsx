@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
-import { Globe, Users, MessageSquare, Plus } from "lucide-react";
+import { Globe, Users, MessageSquare, Plus, BookOpen, GraduationCap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import NewDMSearch from "./NewDMSearch";
 
 interface ChatRoom {
   id: string;
@@ -27,6 +28,8 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
 }) => {
   const [globalRoom, setGlobalRoom] = useState<ChatRoom | null>(null);
   const [groupRooms, setGroupRooms] = useState<ChatRoom[]>([]);
+  const [sectionRooms, setSectionRooms] = useState<ChatRoom[]>([]);
+  const [courseRooms, setCourseRooms] = useState<ChatRoom[]>([]);
   const [dmRooms, setDmRooms] = useState<ChatRoom[]>([]);
 
   useEffect(() => {
@@ -69,11 +72,16 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         .in("id", roomIds);
 
       if (rooms) {
-        setGroupRooms((rooms as ChatRoom[]).filter((r) => r.type === "group"));
-        setDmRooms((rooms as ChatRoom[]).filter((r) => r.type === "dm"));
+        const typed = rooms as ChatRoom[];
+        setGroupRooms(typed.filter((r) => r.type === "group"));
+        setSectionRooms(typed.filter((r) => r.type === "section"));
+        setCourseRooms(typed.filter((r) => r.type === "course"));
+        setDmRooms(typed.filter((r) => r.type === "dm"));
       }
     } else {
       setGroupRooms([]);
+      setSectionRooms([]);
+      setCourseRooms([]);
       setDmRooms([]);
     }
   };
@@ -81,6 +89,8 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   const iconForType = (type: string) => {
     if (type === "global") return <Globe className="h-4 w-4 shrink-0" />;
     if (type === "group") return <Users className="h-4 w-4 shrink-0" />;
+    if (type === "section") return <GraduationCap className="h-4 w-4 shrink-0" />;
+    if (type === "course") return <BookOpen className="h-4 w-4 shrink-0" />;
     return <MessageSquare className="h-4 w-4 shrink-0" />;
   };
 
@@ -99,6 +109,16 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
     </button>
   );
 
+  const RoomSection = ({ label, rooms }: { label: string; rooms: ChatRoom[] }) => {
+    if (rooms.length === 0) return null;
+    return (
+      <div className="mb-3">
+        <p className="text-xs font-medium text-muted-foreground px-2 mb-1">{label}</p>
+        {rooms.map((r) => <RoomButton key={r.id} room={r} />)}
+      </div>
+    );
+  };
+
   return (
     <div className="w-56 border-r flex flex-col h-full bg-background">
       <div className="p-3 border-b">
@@ -113,6 +133,12 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
             <RoomButton room={globalRoom} />
           </div>
         )}
+
+        {/* Sections */}
+        <RoomSection label="SECTIONS" rooms={sectionRooms} />
+
+        {/* Courses */}
+        <RoomSection label="COURSES" rooms={courseRooms} />
 
         {/* Groups */}
         <div className="mb-3">
@@ -131,14 +157,16 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         </div>
 
         {/* DMs */}
-        {dmRooms.length > 0 && (
-          <div>
-            <p className="text-xs font-medium text-muted-foreground px-2 mb-1">DIRECT MESSAGES</p>
-            {dmRooms.map((r) => (
-              <RoomButton key={r.id} room={r} />
-            ))}
-          </div>
-        )}
+        <div className="mb-3">
+          <p className="text-xs font-medium text-muted-foreground px-2 mb-1">DIRECT MESSAGES</p>
+          {dmRooms.map((r) => (
+            <RoomButton key={r.id} room={r} />
+          ))}
+          <NewDMSearch onDMCreated={(room) => {
+            onRoomSelect(room);
+            fetchRooms();
+          }} />
+        </div>
       </ScrollArea>
     </div>
   );
