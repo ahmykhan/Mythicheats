@@ -216,6 +216,7 @@ export type Database = {
         Row: {
           created_at: string
           enrolled_courses: string[] | null
+          has_registered_courses: boolean
           id: string
           section: string | null
           user_id: string
@@ -224,6 +225,7 @@ export type Database = {
         Insert: {
           created_at?: string
           enrolled_courses?: string[] | null
+          has_registered_courses?: boolean
           id?: string
           section?: string | null
           user_id: string
@@ -232,10 +234,47 @@ export type Database = {
         Update: {
           created_at?: string
           enrolled_courses?: string[] | null
+          has_registered_courses?: boolean
           id?: string
           section?: string | null
           user_id?: string
           username?: string
+        }
+        Relationships: []
+      }
+      valid_courses: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      valid_sections: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
         }
         Relationships: []
       }
