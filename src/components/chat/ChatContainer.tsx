@@ -35,6 +35,16 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ currentUsername, isAdmin 
     fetchGlobal();
   }, []);
 
+  // Listen for DM navigation from Lost & Found
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const room = (e as CustomEvent).detail;
+      if (room) setSelectedRoom(room);
+    };
+    window.addEventListener("navigate-to-dm", handler);
+    return () => window.removeEventListener("navigate-to-dm", handler);
+  }, []);
+
   return (
     <div className="flex h-[calc(100vh-200px)] rounded-lg border overflow-hidden bg-background">
       <ChatSidebar
