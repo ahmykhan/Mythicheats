@@ -12,7 +12,8 @@ import {
   Bell, 
   Download, 
   User, 
-  Settings
+  Settings,
+  FileText
 } from "lucide-react";
 import ContentViewer from "./content/ContentViewer";
 import ChatContainer from "./chat/ChatContainer";
