@@ -52,10 +52,15 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, r
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "chat_messages", filter: `room_id=eq.${roomId}` },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new as ChatMessage]);
-          if ((payload.new as any).username !== currentUsername && Notification.permission === "granted") {
-            new Notification(`New message from ${(payload.new as any).username}`, {
-              body: (payload.new as any).message,
+          const newMsg = payload.new as ChatMessage;
+          setMessages((prev) => {
+            // Deduplicate: skip if already present (optimistic or duplicate broadcast)
+            if (prev.some((m) => m.id === newMsg.id)) return prev;
+            return [...prev, newMsg];
+          });
+          if (newMsg.username !== currentUsername && typeof Notification !== 'undefined' && Notification.permission === "granted") {
+            new Notification(`New message from ${newMsg.username}`, {
+              body: newMsg.message,
               icon: "/placeholder.svg",
             });
           }
@@ -85,20 +90,44 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, r
     e.preventDefault();
     if (!newMessage.trim() || sending) return;
 
+    const messageText = newMessage.trim();
+    setNewMessage("");
     setSending(true);
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const { error } = await supabase.from("chat_messages").insert({
+      const optimisticId = crypto.randomUUID();
+      const optimisticMsg: ChatMessage = {
+        id: optimisticId,
         user_id: user.id,
         username: currentUsername,
-        message: newMessage.trim(),
+        message: messageText,
+        created_at: new Date().toISOString(),
         room_id: roomId,
-      });
+      };
 
-      if (error) throw error;
-      setNewMessage("");
+      // Optimistic append
+      setMessages((prev) => [...prev, optimisticMsg]);
+
+      const { data, error } = await supabase.from("chat_messages").insert({
+        user_id: user.id,
+        username: currentUsername,
+        message: messageText,
+        room_id: roomId,
+      }).select("id").single();
+
+      if (error) {
+        // Rollback optimistic message
+        setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
+        throw error;
+      }
+
+      // Replace optimistic ID with real ID so realtime dedup works
+      if (data) {
+        setMessages((prev) => prev.map((m) => m.id === optimisticId ? { ...m, id: data.id } : m));
+      }
     } catch (error) {
       console.error("Error sending message:", error);
       toast({ title: "Error", description: "Failed to send message.", variant: "destructive" });
