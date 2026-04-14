@@ -80,7 +80,7 @@ export const startDM = async (
 
 const NewDMSearch: React.FC<NewDMSearchProps> = ({ onDMCreated }) => {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<{ user_id: string; username: string }[]>([]);
+  const [results, setResults] = useState<{ user_id: string; username: string; email: string }[]>([]);
   const [searching, setSearching] = useState(false);
   const [creating, setCreating] = useState<string | null>(null);
   const [showSearch, setShowSearch] = useState(false);
@@ -91,13 +91,11 @@ const NewDMSearch: React.FC<NewDMSearchProps> = ({ onDMCreated }) => {
     setSearching(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const { data } = await supabase
-        .from("usernames")
-        .select("user_id, username")
-        .ilike("username", `%${query.trim()}%`)
-        .limit(10);
+      const { data } = await supabase.rpc("search_users", {
+        search_query: query.trim(),
+      });
 
-      setResults((data || []).filter((u) => u.user_id !== user?.id));
+      setResults((data || []).filter((u: any) => u.user_id !== user?.id));
     } finally {
       setSearching(false);
     }
@@ -158,7 +156,10 @@ const NewDMSearch: React.FC<NewDMSearchProps> = ({ onDMCreated }) => {
               ) : (
                 <MessageSquarePlus className="h-3 w-3 shrink-0" />
               )}
-              <span className="truncate">{u.username}</span>
+              <div className="truncate">
+                <span className="font-medium">{u.username}</span>
+                <span className="text-muted-foreground ml-1">({u.email})</span>
+              </div>
             </button>
           ))}
         </div>
