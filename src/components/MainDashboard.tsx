@@ -12,13 +12,15 @@ import {
   Bell, 
   Download, 
   User, 
-  Settings
+  Settings,
+  FileText
 } from "lucide-react";
 import ContentViewer from "./content/ContentViewer";
 import ChatContainer from "./chat/ChatContainer";
 import NotificationCenter from "./notifications/NotificationCenter";
 import ProfileSettings from "./profile/ProfileSettings";
 import AdminCourseManager from "./admin/AdminCourseManager";
+import PastPapers from "./pastpapers/PastPapers";
 
 interface MainDashboardProps {
   username: string;
@@ -147,22 +149,26 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ username, userEmail, onLo
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 max-w-2xl mx-auto">
+          <TabsList className="grid w-full grid-cols-5 max-w-3xl mx-auto">
             <TabsTrigger value="courses" className="flex items-center gap-2">
               <BookOpen className="h-4 w-4" />
-              Courses
+              <span className="hidden sm:inline">Courses</span>
+            </TabsTrigger>
+            <TabsTrigger value="past-papers" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              <span className="hidden sm:inline">Past Papers</span>
             </TabsTrigger>
             <TabsTrigger value="chat" className="flex items-center gap-2">
               <MessageCircle className="h-4 w-4" />
-              Chat
+              <span className="hidden sm:inline">Chat</span>
             </TabsTrigger>
             <TabsTrigger value="notifications" className="flex items-center gap-2">
               <Bell className="h-4 w-4" />
-              Notifications
+              <span className="hidden sm:inline">Notifications</span>
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
-              Settings
+              <span className="hidden sm:inline">Settings</span>
             </TabsTrigger>
           </TabsList>
 
@@ -177,6 +183,16 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ username, userEmail, onLo
               ) : (
                 <ContentViewer />
               )}
+            </motion.div>
+          </TabsContent>
+
+          <TabsContent value="past-papers">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <PastPapers />
             </motion.div>
           </TabsContent>
 
