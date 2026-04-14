@@ -32,7 +32,9 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ username, userEmail, onLo
   const [activeTab, setActiveTab] = useState("courses");
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
-  const [notificationPermission, setNotificationPermission] = useState(Notification.permission);
+  const [notificationPermission, setNotificationPermission] = useState(
+    typeof Notification !== 'undefined' ? Notification.permission : 'default'
+  );
   const { toast } = useToast();
   
   const isAdmin = userEmail === ADMIN_EMAIL;
