@@ -288,6 +288,14 @@ export type Database = {
         Args: { _room_id: string; _user_id: string }
         Returns: boolean
       }
+      search_users: {
+        Args: { search_query: string }
+        Returns: {
+          email: string
+          user_id: string
+          username: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
