@@ -19,6 +19,7 @@ import ChatContainer from "./chat/ChatContainer";
 import NotificationCenter from "./notifications/NotificationCenter";
 import ProfileSettings from "./profile/ProfileSettings";
 import AdminCourseManager from "./admin/AdminCourseManager";
+import PastPapers from "./pastpapers/PastPapers";
 
 interface MainDashboardProps {
   username: string;
