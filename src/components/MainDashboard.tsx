@@ -25,6 +25,7 @@ import AdminCourseManager from "./admin/AdminCourseManager";
 import PastPapers from "./pastpapers/PastPapers";
 import LostAndFound from "./lostfound/LostAndFound";
 import FastGrader from "./grader/FastGrader";
+import ThemeSelector from "./theme/ThemeSelector";
 
 interface MainDashboardProps {
   username: string;
@@ -89,17 +90,17 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ username, userEmail, onLo
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="bg-white border-b shadow-sm sticky top-0 z-50">
+      <header className="bg-card border-b border-border shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
                 Mythic Cheats
               </h1>
               {isAdmin && (
-                <span className="ml-2 px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
+                <span className="ml-2 px-2 py-1 bg-destructive/10 text-destructive text-xs rounded-full">
                   Admin
                 </span>
               )}
@@ -132,15 +133,18 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ username, userEmail, onLo
                 </Button>
               )}
               
+              {/* Theme Toggle */}
+              <ThemeSelector />
+
               {/* User Menu */}
               <div className="flex items-center space-x-2">
-                <User className="h-5 w-5 text-gray-500" />
-                <span className="text-sm font-medium">{username}</span>
+                <User className="h-5 w-5 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">{username}</span>
                 <Button
                   onClick={onLogout}
                   variant="ghost"
                   size="sm"
-                  className="text-red-600 hover:text-red-700"
+                  className="text-destructive hover:text-destructive/80"
                 >
                   <LogOut className="h-4 w-4" />
                 </Button>
