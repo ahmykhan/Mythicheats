@@ -24,6 +24,7 @@ import ProfileSettings from "./profile/ProfileSettings";
 import AdminCourseManager from "./admin/AdminCourseManager";
 import PastPapers from "./pastpapers/PastPapers";
 import LostAndFound from "./lostfound/LostAndFound";
+import FastGrader from "./grader/FastGrader";
 
 interface MainDashboardProps {
   username: string;
