@@ -14,7 +14,8 @@ import {
   User, 
   Settings,
   FileText,
-  PackageSearch
+  PackageSearch,
+  Calculator
 } from "lucide-react";
 import ContentViewer from "./content/ContentViewer";
 import ChatContainer from "./chat/ChatContainer";
