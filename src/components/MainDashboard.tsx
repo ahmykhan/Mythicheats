@@ -153,7 +153,7 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ username, userEmail, onLo
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 max-w-4xl mx-auto">
+          <TabsList className="grid w-full grid-cols-7 max-w-5xl mx-auto">
             <TabsTrigger value="courses" className="flex items-center gap-2">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Courses</span>
@@ -161,6 +161,10 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ username, userEmail, onLo
             <TabsTrigger value="past-papers" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">Past Papers</span>
+            </TabsTrigger>
+            <TabsTrigger value="grader" className="flex items-center gap-2">
+              <Calculator className="h-4 w-4" />
+              <span className="hidden sm:inline">Grader</span>
             </TabsTrigger>
             <TabsTrigger value="chat" className="flex items-center gap-2">
               <MessageCircle className="h-4 w-4" />
