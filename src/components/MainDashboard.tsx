@@ -208,6 +208,16 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ username, userEmail, onLo
             </motion.div>
           </TabsContent>
 
+          <TabsContent value="grader">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <FastGrader />
+            </motion.div>
+          </TabsContent>
+
           <TabsContent value="chat">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
