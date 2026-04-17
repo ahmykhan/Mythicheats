@@ -31,10 +31,10 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-transparent text-foreground">
       {/* Mobile Header */}
       {isMobile && (
-        <header className="bg-white border-b fixed top-0 left-0 right-0 z-50 h-16 flex items-center px-4">
+        <header className="bg-card/80 backdrop-blur border-b border-border fixed top-0 left-0 right-0 z-50 h-16 flex items-center px-4">
           <Button
             variant="ghost"
             size="icon"
@@ -55,7 +55,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 isSidebarOpen ? "translate-x-0" : "-translate-x-full"
               }`
             : "fixed top-0 left-0 z-40"
-        } w-64 h-full bg-white border-r transition-transform duration-200 ease-in-out`}
+        } w-64 h-full bg-card/80 backdrop-blur border-r border-border transition-transform duration-200 ease-in-out`}
       >
         {!isMobile && (
           <div className="h-16 flex items-center px-6 border-b">
