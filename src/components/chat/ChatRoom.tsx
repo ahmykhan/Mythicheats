@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Trash2, Flag, Info, MessageSquarePlus } from "lucide-react";
+import { Send, Trash2, Flag, Info, MessageSquarePlus, Smile } from "lucide-react";
+import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -37,7 +38,9 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, r
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [showGroupInfo, setShowGroupInfo] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const isOfficialRoom = roomType === "section" || roomType === "course";
@@ -133,7 +136,14 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, r
       toast({ title: "Error", description: "Failed to send message.", variant: "destructive" });
     } finally {
       setSending(false);
+      // Restore focus so user can keep typing without re-clicking
+      inputRef.current?.focus();
     }
+  };
+
+  const handleEmojiSelect = (emojiData: EmojiClickData) => {
+    setNewMessage((prev) => prev + emojiData.emoji);
+    inputRef.current?.focus();
   };
 
   const deleteMessage = async (messageId: string) => {
@@ -284,12 +294,28 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, r
       )}
 
       <form onSubmit={sendMessage} className="flex gap-2 p-4 border-t">
+        <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+          <PopoverTrigger asChild>
+            <Button type="button" variant="ghost" size="icon" disabled={sending}>
+              <Smile className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0 border-none" side="top" align="start">
+            <EmojiPicker
+              onEmojiClick={handleEmojiSelect}
+              theme={Theme.AUTO}
+              lazyLoadEmojis
+            />
+          </PopoverContent>
+        </Popover>
         <Input
+          ref={inputRef}
           placeholder="Type your message..."
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           className="flex-1"
           disabled={sending}
+          autoFocus
         />
         <Button type="submit" disabled={sending || !newMessage.trim()}>
           <Send className="h-4 w-4" />
