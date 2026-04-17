@@ -21,7 +21,7 @@ const queryClient = new QueryClient({
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      <div className="relative min-h-screen">
+      <div className="relative min-h-screen bg-background text-foreground">
         <EnhancedBackground />
         <div className="relative z-10">
           
