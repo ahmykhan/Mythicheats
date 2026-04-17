@@ -2,8 +2,9 @@
 import type { Config } from "tailwindcss";
 
 export default {
-  darkMode: ["selector", '.theme-dark, .theme-midnight'],
+  darkMode: ["selector", ":is(.dark, .theme-dark, .theme-midnight)"],
   content: [
+    "./index.html",
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
     "./app/**/*.{ts,tsx}",
