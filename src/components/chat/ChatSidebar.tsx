@@ -120,7 +120,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   };
 
   return (
-    <div className="w-56 border-r flex flex-col h-full bg-background">
+    <div className="w-full md:w-56 md:border-r flex flex-col h-full bg-background">
       <div className="p-3 border-b">
         <h3 className="font-semibold text-sm">Chats</h3>
       </div>

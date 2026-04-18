@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Trash2, Flag, Info, MessageSquarePlus, Smile } from "lucide-react";
+import { Send, Trash2, Flag, Info, MessageSquarePlus, Smile, ArrowLeft } from "lucide-react";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -31,9 +31,10 @@ interface ChatRoomProps {
   joinCode?: string | null;
   roomType?: string;
   onNavigateToRoom?: (room: { id: string; name: string; type: string; join_code: string | null }) => void;
+  onBack?: () => void;
 }
 
-const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, roomId, roomName, joinCode, roomType, onNavigateToRoom }) => {
+const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, roomId, roomName, joinCode, roomType, onNavigateToRoom, onBack }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -136,8 +137,10 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, r
       toast({ title: "Error", description: "Failed to send message.", variant: "destructive" });
     } finally {
       setSending(false);
-      // Restore focus so user can keep typing without re-clicking
-      inputRef.current?.focus();
+      // Restore focus AFTER React's re-render cycle completes
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 10);
     }
   };
 
@@ -204,8 +207,21 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, r
   return (
     <div className="flex flex-col h-full">
       <div className="flex justify-between items-center p-4 border-b">
-        <h2 className="text-lg font-semibold">{roomName}</h2>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          {onBack && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden shrink-0 h-8 w-8"
+              onClick={onBack}
+              aria-label="Back to chats"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          )}
+          <h2 className="text-lg font-semibold truncate">{roomName}</h2>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
           {showInfoButton && (
             <Button variant="ghost" size="sm" onClick={() => setShowGroupInfo(true)}>
               <Info className="h-4 w-4 mr-1" /> Info
@@ -314,7 +330,6 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, r
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           className="flex-1"
-          disabled={sending}
           autoFocus
         />
         <Button type="submit" disabled={sending || !newMessage.trim()}>

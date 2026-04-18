@@ -158,7 +158,9 @@ const NewDMSearch: React.FC<NewDMSearchProps> = ({ onDMCreated }) => {
               )}
               <div className="truncate">
                 <span className="font-medium">{u.username}</span>
-                <span className="text-muted-foreground ml-1">({u.email})</span>
+                <span className="text-muted-foreground ml-1">
+                  ({u.email?.split("@")[0]})
+                </span>
               </div>
             </button>
           ))}
