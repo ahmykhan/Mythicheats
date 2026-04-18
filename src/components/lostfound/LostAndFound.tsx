@@ -420,19 +420,23 @@ const LostAndFound: React.FC<LostAndFoundProps> = ({ onNavigateToDM }) => {
                     >
                       <CheckCircle className="h-3 w-3 mr-1" /> Mark as Resolved
                     </Button>
+                  ) : item.item_type === "lost" ? (
+                    <Button
+                      size="sm"
+                      className="w-full text-xs"
+                      onClick={() => openDropoffModal(item)}
+                    >
+                      <PackageCheck className="h-3 w-3 mr-1" />
+                      I found this!
+                    </Button>
                   ) : (
                     <Button
                       size="sm"
                       className="w-full text-xs"
-                      onClick={() => handleContactOwner(item)}
-                      disabled={dmLoading === item.id}
+                      onClick={() => setClaimItem(item)}
                     >
-                      {dmLoading === item.id ? (
-                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                      ) : (
-                        <MessageCircle className="h-3 w-3 mr-1" />
-                      )}
-                      {item.item_type === "lost" ? "I found this!" : "This is mine!"}
+                      <ShieldCheck className="h-3 w-3 mr-1" />
+                      That is mine!
                     </Button>
                   )}
                 </div>
@@ -441,6 +445,65 @@ const LostAndFound: React.FC<LostAndFoundProps> = ({ onNavigateToDM }) => {
           ))}
         </div>
       )}
+
+      {/* Drop-off Modal */}
+      <Dialog open={!!dropoffItem} onOpenChange={(o) => !o && setDropoffItem(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <PackageCheck className="h-5 w-5" /> Thank you!
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-center">
+            <p className="text-sm text-muted-foreground">
+              Please drop this item off at the <span className="font-semibold text-foreground">Campus Admin Desk</span>.
+              Show this Reference ID when handing it over.
+            </p>
+            <div className="rounded-lg border-2 border-dashed border-primary/40 bg-primary/5 py-6">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Reference ID</p>
+              <p className="text-5xl font-bold tracking-widest text-primary">{dropoffRefId}</p>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              The owner of <span className="font-medium text-foreground">"{dropoffItem?.title}"</span> will be notified once you confirm.
+            </p>
+            <Button onClick={confirmDropoff} disabled={dropoffSubmitting} className="w-full">
+              {dropoffSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+              Confirm Drop-off
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Claim Modal */}
+      <Dialog open={!!claimItem} onOpenChange={(o) => !o && setClaimItem(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5" /> Verify Ownership
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              To claim <span className="font-medium text-foreground">"{claimItem?.title}"</span>, describe a unique detail
+              about this item to prove it belongs to you (e.g., a scratch, sticker, contents, serial number).
+            </p>
+            <Textarea
+              placeholder="Describe a unique detail about this item..."
+              value={claimProof}
+              onChange={(e) => setClaimProof(e.target.value)}
+              maxLength={500}
+              rows={4}
+            />
+            <p className="text-xs text-muted-foreground">
+              {claimProof.length}/500 characters
+            </p>
+            <Button onClick={submitClaim} disabled={claimSubmitting} className="w-full">
+              {claimSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+              Submit Claim
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
