@@ -31,9 +31,10 @@ interface ChatRoomProps {
   joinCode?: string | null;
   roomType?: string;
   onNavigateToRoom?: (room: { id: string; name: string; type: string; join_code: string | null }) => void;
+  onBack?: () => void;
 }
 
-const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, roomId, roomName, joinCode, roomType, onNavigateToRoom }) => {
+const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, roomId, roomName, joinCode, roomType, onNavigateToRoom, onBack }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
