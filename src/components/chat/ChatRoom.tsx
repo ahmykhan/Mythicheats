@@ -207,8 +207,21 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, r
   return (
     <div className="flex flex-col h-full">
       <div className="flex justify-between items-center p-4 border-b">
-        <h2 className="text-lg font-semibold">{roomName}</h2>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          {onBack && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden shrink-0 h-8 w-8"
+              onClick={onBack}
+              aria-label="Back to chats"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          )}
+          <h2 className="text-lg font-semibold truncate">{roomName}</h2>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
           {showInfoButton && (
             <Button variant="ghost" size="sm" onClick={() => setShowGroupInfo(true)}>
               <Info className="h-4 w-4 mr-1" /> Info
