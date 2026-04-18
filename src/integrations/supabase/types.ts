@@ -124,13 +124,50 @@ export type Database = {
         }
         Relationships: []
       }
+      lost_found_claims: {
+        Row: {
+          claimer_id: string
+          created_at: string
+          id: string
+          item_id: string
+          proof_message: string
+          status: string
+        }
+        Insert: {
+          claimer_id: string
+          created_at?: string
+          id?: string
+          item_id: string
+          proof_message: string
+          status?: string
+        }
+        Update: {
+          claimer_id?: string
+          created_at?: string
+          id?: string
+          item_id?: string
+          proof_message?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lost_found_claims_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "lost_found_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lost_found_items: {
         Row: {
           created_at: string
           description: string | null
+          dropped_by: string | null
           id: string
           image_url: string | null
           item_type: string
+          reference_id: string | null
           status: string
           title: string
           user_id: string
@@ -138,9 +175,11 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
+          dropped_by?: string | null
           id?: string
           image_url?: string | null
           item_type: string
+          reference_id?: string | null
           status?: string
           title: string
           user_id: string
@@ -148,9 +187,11 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
+          dropped_by?: string | null
           id?: string
           image_url?: string | null
           item_type?: string
+          reference_id?: string | null
           status?: string
           title?: string
           user_id?: string
@@ -244,6 +285,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_notifications: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_read: boolean
+          link: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       usernames: {
         Row: {
