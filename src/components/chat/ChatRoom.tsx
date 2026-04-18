@@ -330,7 +330,6 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, r
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           className="flex-1"
-          disabled={sending}
           autoFocus
         />
         <Button type="submit" disabled={sending || !newMessage.trim()}>
