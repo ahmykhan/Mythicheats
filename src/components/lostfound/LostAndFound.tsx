@@ -37,7 +37,10 @@ interface LostFoundItem {
 }
 
 interface LostAndFoundProps {
-  onNavigateToDM?: (room: { id: string; name: string; type: string; join_code: string | null }) => void;
+  onNavigateToDM?: (
+    room: { id: string; name: string; type: string; join_code: string | null },
+    prefillMessage?: string
+  ) => void;
 }
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
@@ -187,8 +190,9 @@ const LostAndFound: React.FC<LostAndFoundProps> = ({ onNavigateToDM }) => {
     setDmLoading(item.id);
     try {
       const room = await startDM(item.user_id, targetUsername);
+      const prefill = `Hi, I am contacting you regarding the "${item.title}" you posted in the Lost & Found.`;
       if (room && onNavigateToDM) {
-        onNavigateToDM(room);
+        onNavigateToDM(room, prefill);
       }
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });

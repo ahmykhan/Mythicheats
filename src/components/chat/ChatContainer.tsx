@@ -22,6 +22,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ currentUsername, isAdmin 
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [groupModalOpen, setGroupModalOpen] = useState(false);
   const [groupModalTab, setGroupModalTab] = useState<"create" | "join">("create");
+  const [prefillMessage, setPrefillMessage] = useState<string>("");
   const isMobile = useIsMobile();
 
   // Auto-select global room on mount (desktop only — mobile starts on chat list)
@@ -42,8 +43,16 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ currentUsername, isAdmin 
   // Listen for DM navigation from Lost & Found
   useEffect(() => {
     const handler = (e: Event) => {
-      const room = (e as CustomEvent).detail;
-      if (room) setSelectedRoom(room);
+      const detail = (e as CustomEvent).detail;
+      if (!detail) return;
+      // Backwards compat: detail can be a Room directly, or { room, prefillMessage }
+      if (detail.room) {
+        setSelectedRoom(detail.room as Room);
+        setPrefillMessage(detail.prefillMessage || "");
+      } else {
+        setSelectedRoom(detail as Room);
+        setPrefillMessage("");
+      }
     };
     window.addEventListener("navigate-to-dm", handler);
     return () => window.removeEventListener("navigate-to-dm", handler);
@@ -85,6 +94,8 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ currentUsername, isAdmin 
               roomName={selectedRoom.name}
               joinCode={selectedRoom.join_code}
               roomType={selectedRoom.type}
+              prefillMessage={prefillMessage}
+              onPrefillConsumed={() => setPrefillMessage("")}
               onNavigateToRoom={(room) => setSelectedRoom(room)}
               onBack={isMobile ? () => setSelectedRoom(null) : undefined}
             />
