@@ -18,12 +18,12 @@ import {
   Plus,
   ImagePlus,
   Loader2,
-  MessageCircle,
   CheckCircle,
   PackageSearch,
   MapPin,
+  PackageCheck,
+  ShieldCheck,
 } from "lucide-react";
-import { startDM } from "@/components/chat/NewDMSearch";
 
 interface LostFoundItem {
   id: string;
@@ -61,7 +61,16 @@ const LostAndFound: React.FC<LostAndFoundProps> = ({ onNavigateToDM }) => {
   const [description, setDescription] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [dmLoading, setDmLoading] = useState<string | null>(null);
+
+  // Drop-off modal (I found this!)
+  const [dropoffItem, setDropoffItem] = useState<LostFoundItem | null>(null);
+  const [dropoffRefId, setDropoffRefId] = useState<string>("");
+  const [dropoffSubmitting, setDropoffSubmitting] = useState(false);
+
+  // Claim modal (That is mine!)
+  const [claimItem, setClaimItem] = useState<LostFoundItem | null>(null);
+  const [claimProof, setClaimProof] = useState("");
+  const [claimSubmitting, setClaimSubmitting] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -185,19 +194,82 @@ const LostAndFound: React.FC<LostAndFoundProps> = ({ onNavigateToDM }) => {
     }
   };
 
-  const handleContactOwner = async (item: LostFoundItem) => {
-    const targetUsername = usernames[item.user_id] || "User";
-    setDmLoading(item.id);
+  const openDropoffModal = (item: LostFoundItem) => {
+    const refId = Math.floor(1000 + Math.random() * 9000).toString();
+    setDropoffRefId(refId);
+    setDropoffItem(item);
+  };
+
+  const confirmDropoff = async () => {
+    if (!dropoffItem || !currentUserId) return;
+    setDropoffSubmitting(true);
     try {
-      const room = await startDM(item.user_id, targetUsername);
-      const prefill = `Hi, I am contacting you regarding the "${item.title}" you posted in the Lost & Found.`;
-      if (room && onNavigateToDM) {
-        onNavigateToDM(room, prefill);
-      }
+      const { error: updErr } = await supabase
+        .from("lost_found_items")
+        .update({
+          status: "at_admin_desk",
+          reference_id: dropoffRefId,
+          dropped_by: currentUserId,
+        })
+        .eq("id", dropoffItem.id);
+      if (updErr) throw updErr;
+
+      const { error: notifErr } = await supabase.from("user_notifications").insert({
+        user_id: dropoffItem.user_id,
+        title: "Your item has been found!",
+        description: `"${dropoffItem.title}" was dropped off at the Campus Admin Desk. Reference ID: ${dropoffRefId}. Please collect it from the admin office.`,
+        link: "/lost-found",
+      });
+      if (notifErr) throw notifErr;
+
+      toast({
+        title: "Drop-off confirmed!",
+        description: `Reference ID ${dropoffRefId} recorded. The owner has been notified.`,
+      });
+      setDropoffItem(null);
+      setDropoffRefId("");
+      fetchItems();
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
-      setDmLoading(null);
+      setDropoffSubmitting(false);
+    }
+  };
+
+  const submitClaim = async () => {
+    if (!claimItem || !currentUserId) return;
+    if (claimProof.trim().length < 10) {
+      toast({
+        title: "More detail needed",
+        description: "Please describe a unique detail (at least 10 characters).",
+        variant: "destructive",
+      });
+      return;
+    }
+    setClaimSubmitting(true);
+    try {
+      const { error: claimErr } = await supabase.from("lost_found_claims").insert({
+        item_id: claimItem.id,
+        claimer_id: currentUserId,
+        proof_message: claimProof.trim(),
+      });
+      if (claimErr) throw claimErr;
+
+      const claimerName = "A user";
+      await supabase.from("user_notifications").insert({
+        user_id: claimItem.user_id,
+        title: "New ownership claim",
+        description: `${claimerName} submitted a claim for "${claimItem.title}". Review their proof in the Lost & Found.`,
+        link: "/lost-found",
+      });
+
+      toast({ title: "Claim sent to the finder for verification!" });
+      setClaimItem(null);
+      setClaimProof("");
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setClaimSubmitting(false);
     }
   };
 
@@ -348,19 +420,23 @@ const LostAndFound: React.FC<LostAndFoundProps> = ({ onNavigateToDM }) => {
                     >
                       <CheckCircle className="h-3 w-3 mr-1" /> Mark as Resolved
                     </Button>
+                  ) : item.item_type === "lost" ? (
+                    <Button
+                      size="sm"
+                      className="w-full text-xs"
+                      onClick={() => openDropoffModal(item)}
+                    >
+                      <PackageCheck className="h-3 w-3 mr-1" />
+                      I found this!
+                    </Button>
                   ) : (
                     <Button
                       size="sm"
                       className="w-full text-xs"
-                      onClick={() => handleContactOwner(item)}
-                      disabled={dmLoading === item.id}
+                      onClick={() => setClaimItem(item)}
                     >
-                      {dmLoading === item.id ? (
-                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                      ) : (
-                        <MessageCircle className="h-3 w-3 mr-1" />
-                      )}
-                      {item.item_type === "lost" ? "I found this!" : "This is mine!"}
+                      <ShieldCheck className="h-3 w-3 mr-1" />
+                      That is mine!
                     </Button>
                   )}
                 </div>
@@ -369,6 +445,65 @@ const LostAndFound: React.FC<LostAndFoundProps> = ({ onNavigateToDM }) => {
           ))}
         </div>
       )}
+
+      {/* Drop-off Modal */}
+      <Dialog open={!!dropoffItem} onOpenChange={(o) => !o && setDropoffItem(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <PackageCheck className="h-5 w-5" /> Thank you!
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-center">
+            <p className="text-sm text-muted-foreground">
+              Please drop this item off at the <span className="font-semibold text-foreground">Campus Admin Desk</span>.
+              Show this Reference ID when handing it over.
+            </p>
+            <div className="rounded-lg border-2 border-dashed border-primary/40 bg-primary/5 py-6">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Reference ID</p>
+              <p className="text-5xl font-bold tracking-widest text-primary">{dropoffRefId}</p>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              The owner of <span className="font-medium text-foreground">"{dropoffItem?.title}"</span> will be notified once you confirm.
+            </p>
+            <Button onClick={confirmDropoff} disabled={dropoffSubmitting} className="w-full">
+              {dropoffSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+              Confirm Drop-off
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Claim Modal */}
+      <Dialog open={!!claimItem} onOpenChange={(o) => !o && setClaimItem(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5" /> Verify Ownership
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              To claim <span className="font-medium text-foreground">"{claimItem?.title}"</span>, describe a unique detail
+              about this item to prove it belongs to you (e.g., a scratch, sticker, contents, serial number).
+            </p>
+            <Textarea
+              placeholder="Describe a unique detail about this item..."
+              value={claimProof}
+              onChange={(e) => setClaimProof(e.target.value)}
+              maxLength={500}
+              rows={4}
+            />
+            <p className="text-xs text-muted-foreground">
+              {claimProof.length}/500 characters
+            </p>
+            <Button onClick={submitClaim} disabled={claimSubmitting} className="w-full">
+              {claimSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+              Submit Claim
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
