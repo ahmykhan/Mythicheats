@@ -136,8 +136,10 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, r
       toast({ title: "Error", description: "Failed to send message.", variant: "destructive" });
     } finally {
       setSending(false);
-      // Restore focus so user can keep typing without re-clicking
-      inputRef.current?.focus();
+      // Restore focus AFTER React's re-render cycle completes
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 10);
     }
   };
 
