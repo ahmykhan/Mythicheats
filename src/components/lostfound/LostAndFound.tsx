@@ -18,12 +18,12 @@ import {
   Plus,
   ImagePlus,
   Loader2,
-  MessageCircle,
   CheckCircle,
   PackageSearch,
   MapPin,
+  PackageCheck,
+  ShieldCheck,
 } from "lucide-react";
-import { startDM } from "@/components/chat/NewDMSearch";
 
 interface LostFoundItem {
   id: string;
