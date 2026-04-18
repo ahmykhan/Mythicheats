@@ -30,11 +30,13 @@ interface ChatRoomProps {
   roomName: string;
   joinCode?: string | null;
   roomType?: string;
+  prefillMessage?: string;
+  onPrefillConsumed?: () => void;
   onNavigateToRoom?: (room: { id: string; name: string; type: string; join_code: string | null }) => void;
   onBack?: () => void;
 }
 
-const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, roomId, roomName, joinCode, roomType, onNavigateToRoom, onBack }) => {
+const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, roomId, roomName, joinCode, roomType, prefillMessage, onPrefillConsumed, onNavigateToRoom, onBack }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -74,6 +76,16 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ currentUsername, isAdmin = false, r
 
     return () => { supabase.removeChannel(channel); };
   }, [roomId]);
+
+  // Apply prefill message when arriving from Lost & Found (or similar)
+  useEffect(() => {
+    if (prefillMessage && prefillMessage.trim()) {
+      setNewMessage(prefillMessage);
+      onPrefillConsumed?.();
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillMessage, roomId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

@@ -239,11 +239,13 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ username, userEmail, onLo
               transition={{ duration: 0.5 }}
             >
               <LostAndFound
-                onNavigateToDM={(room) => {
+                onNavigateToDM={(room, prefillMessage) => {
                   setActiveTab("chat");
                   // Small delay to let the chat tab mount
                   setTimeout(() => {
-                    window.dispatchEvent(new CustomEvent("navigate-to-dm", { detail: room }));
+                    window.dispatchEvent(
+                      new CustomEvent("navigate-to-dm", { detail: { room, prefillMessage } })
+                    );
                   }, 100);
                 }}
               />
