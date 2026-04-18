@@ -194,19 +194,82 @@ const LostAndFound: React.FC<LostAndFoundProps> = ({ onNavigateToDM }) => {
     }
   };
 
-  const handleContactOwner = async (item: LostFoundItem) => {
-    const targetUsername = usernames[item.user_id] || "User";
-    setDmLoading(item.id);
+  const openDropoffModal = (item: LostFoundItem) => {
+    const refId = Math.floor(1000 + Math.random() * 9000).toString();
+    setDropoffRefId(refId);
+    setDropoffItem(item);
+  };
+
+  const confirmDropoff = async () => {
+    if (!dropoffItem || !currentUserId) return;
+    setDropoffSubmitting(true);
     try {
-      const room = await startDM(item.user_id, targetUsername);
-      const prefill = `Hi, I am contacting you regarding the "${item.title}" you posted in the Lost & Found.`;
-      if (room && onNavigateToDM) {
-        onNavigateToDM(room, prefill);
-      }
+      const { error: updErr } = await supabase
+        .from("lost_found_items")
+        .update({
+          status: "at_admin_desk",
+          reference_id: dropoffRefId,
+          dropped_by: currentUserId,
+        })
+        .eq("id", dropoffItem.id);
+      if (updErr) throw updErr;
+
+      const { error: notifErr } = await supabase.from("user_notifications").insert({
+        user_id: dropoffItem.user_id,
+        title: "Your item has been found!",
+        description: `"${dropoffItem.title}" was dropped off at the Campus Admin Desk. Reference ID: ${dropoffRefId}. Please collect it from the admin office.`,
+        link: "/lost-found",
+      });
+      if (notifErr) throw notifErr;
+
+      toast({
+        title: "Drop-off confirmed!",
+        description: `Reference ID ${dropoffRefId} recorded. The owner has been notified.`,
+      });
+      setDropoffItem(null);
+      setDropoffRefId("");
+      fetchItems();
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
-      setDmLoading(null);
+      setDropoffSubmitting(false);
+    }
+  };
+
+  const submitClaim = async () => {
+    if (!claimItem || !currentUserId) return;
+    if (claimProof.trim().length < 10) {
+      toast({
+        title: "More detail needed",
+        description: "Please describe a unique detail (at least 10 characters).",
+        variant: "destructive",
+      });
+      return;
+    }
+    setClaimSubmitting(true);
+    try {
+      const { error: claimErr } = await supabase.from("lost_found_claims").insert({
+        item_id: claimItem.id,
+        claimer_id: currentUserId,
+        proof_message: claimProof.trim(),
+      });
+      if (claimErr) throw claimErr;
+
+      const claimerName = "A user";
+      await supabase.from("user_notifications").insert({
+        user_id: claimItem.user_id,
+        title: "New ownership claim",
+        description: `${claimerName} submitted a claim for "${claimItem.title}". Review their proof in the Lost & Found.`,
+        link: "/lost-found",
+      });
+
+      toast({ title: "Claim sent to the finder for verification!" });
+      setClaimItem(null);
+      setClaimProof("");
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setClaimSubmitting(false);
     }
   };
 
