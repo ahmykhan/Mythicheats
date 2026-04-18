@@ -61,7 +61,16 @@ const LostAndFound: React.FC<LostAndFoundProps> = ({ onNavigateToDM }) => {
   const [description, setDescription] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [dmLoading, setDmLoading] = useState<string | null>(null);
+
+  // Drop-off modal (I found this!)
+  const [dropoffItem, setDropoffItem] = useState<LostFoundItem | null>(null);
+  const [dropoffRefId, setDropoffRefId] = useState<string>("");
+  const [dropoffSubmitting, setDropoffSubmitting] = useState(false);
+
+  // Claim modal (That is mine!)
+  const [claimItem, setClaimItem] = useState<LostFoundItem | null>(null);
+  const [claimProof, setClaimProof] = useState("");
+  const [claimSubmitting, setClaimSubmitting] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
