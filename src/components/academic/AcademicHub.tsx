@@ -203,7 +203,15 @@ const AcademicHub: React.FC<AcademicHubProps> = ({ isAdmin = false }) => {
   const ingestRows = (rows: any[][], sourceName: string) => {
     const fmt = detectFormat(rows);
     if (fmt === "timetable") {
-      const slots = parseTimetable(rows);
+      const parsed = parseFastTimetableRows(rows);
+      const slots: TimetableSlot[] = parsed.map((p) => ({
+        day: p.day,
+        time: p.time,
+        course: p.course,
+        section: p.section,
+        room: p.room,
+        raw: `${p.course} (${p.section})${p.instructor ? `: ${p.instructor}` : ""}`,
+      }));
       setTimetableData(slots);
       toast({
         title: "Timetable loaded",
