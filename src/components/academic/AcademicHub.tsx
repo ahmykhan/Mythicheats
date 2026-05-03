@@ -131,7 +131,7 @@ const AcademicHub: React.FC = () => {
 
   // Timetable
   const [timetableData, setTimetableData] = useState<TimetableSlot[]>([]);
-  const [selectedSection, setSelectedSection] = useState<string>(SECTIONS[0]);
+  const [selectedSection, setSelectedSection] = useState<string>("");
   const timetableRef = useRef<HTMLDivElement>(null);
 
   // Datesheet
