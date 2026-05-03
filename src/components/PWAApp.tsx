@@ -126,31 +126,42 @@ const PWAApp: React.FC = () => {
           autoUsername = googleName;
         }
 
-        if (autoUsername.length >= 3) {
-          // Try a few unique variants in case of collision
-          for (const candidate of [autoUsername, `${autoUsername}_${user.id.slice(0, 4)}`]) {
-            const { error: insertError } = await supabase
-              .from("usernames")
-              .insert({ user_id: user.id, username: candidate });
-            if (!insertError) {
-              setUsername(candidate);
-              setNeedsUsername(false);
-              return;
-            }
-          }
-          // Insert failed (likely race / row already exists) — re-fetch
-          const { data: retry } = await supabase
+        // Always auto-generate — never prompt the user.
+        if (!autoUsername) {
+          const emailPrefix = (email.split("@")[0] || "user").trim();
+          autoUsername = rollNumber
+            ? `${emailPrefix} (${rollNumber})`
+            : emailPrefix || `user_${user.id.slice(0, 6)}`;
+        }
+        const candidates = [
+          autoUsername,
+          `${autoUsername}_${user.id.slice(0, 4)}`,
+          `${autoUsername}_${user.id.slice(0, 8)}`,
+        ];
+        for (const candidate of candidates) {
+          const { error: insertError } = await supabase
             .from("usernames")
-            .select("username")
-            .eq("user_id", user.id)
-            .maybeSingle();
-          if (retry?.username) {
-            setUsername(retry.username);
+            .insert({ user_id: user.id, username: candidate });
+          if (!insertError) {
+            setUsername(candidate);
             setNeedsUsername(false);
             return;
           }
         }
-        setNeedsUsername(true);
+        // Final fallback: re-fetch in case of race
+        const { data: retry } = await supabase
+          .from("usernames")
+          .select("username")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (retry?.username) {
+          setUsername(retry.username);
+          setNeedsUsername(false);
+          return;
+        }
+        // Last-resort: use auto name in-memory so user is never blocked
+        setUsername(autoUsername);
+        setNeedsUsername(false);
       }
     } catch (error) {
       console.error("Error checking username:", error);
