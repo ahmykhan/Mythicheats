@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 import Papa from "papaparse";
 import html2canvas from "html2canvas";
+import { parseFastTimetableRows } from "@/utils/timetableParser";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const TIME_SLOTS = ["08:30", "10:00", "11:30", "13:00", "14:30", "16:00"];
@@ -202,7 +203,15 @@ const AcademicHub: React.FC<AcademicHubProps> = ({ isAdmin = false }) => {
   const ingestRows = (rows: any[][], sourceName: string) => {
     const fmt = detectFormat(rows);
     if (fmt === "timetable") {
-      const slots = parseTimetable(rows);
+      const parsed = parseFastTimetableRows(rows);
+      const slots: TimetableSlot[] = parsed.map((p) => ({
+        day: p.day,
+        time: p.time,
+        course: p.course,
+        section: p.section,
+        room: p.room,
+        raw: `${p.course} (${p.section})${p.instructor ? `: ${p.instructor}` : ""}`,
+      }));
       setTimetableData(slots);
       toast({
         title: "Timetable loaded",
