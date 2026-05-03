@@ -15,7 +15,8 @@ import {
   Settings,
   FileText,
   PackageSearch,
-  Calculator
+  Calculator,
+  CalendarDays
 } from "lucide-react";
 import ContentViewer from "./content/ContentViewer";
 import ChatContainer from "./chat/ChatContainer";
