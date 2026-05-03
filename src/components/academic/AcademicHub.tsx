@@ -577,29 +577,37 @@ const AcademicHub: React.FC<AcademicHubProps> = ({ isAdmin = false }) => {
         </div>
       )}
 
-      {/* Upload at the bottom — populates BOTH timetable & datesheet */}
-      <div className="flex flex-col items-center gap-2 pt-6 border-t border-purple-500/20">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".csv,.xlsx,.xls"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) handleFile(f);
-            e.target.value = "";
-          }}
-        />
-        <Button
-          onClick={() => fileInputRef.current?.click()}
-          className="bg-purple-600 hover:bg-purple-500 text-white"
-        >
-          <Upload className="h-4 w-4 mr-2" /> Upload CSV / Excel
-        </Button>
-        <p className="text-xs text-muted-foreground">
-          Upload your FAST-NUCES Time Table (FSC_TT) or Exam Datesheet — the format is auto-detected.
-        </p>
-      </div>
+      {/* Upload at the bottom — admin only. Students just see the data. */}
+      {isAdmin ? (
+        <div className="flex flex-col items-center gap-2 pt-6 border-t border-purple-500/20">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,.xlsx,.xls"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleFile(f);
+              e.target.value = "";
+            }}
+          />
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            className="bg-purple-600 hover:bg-purple-500 text-white"
+          >
+            <Upload className="h-4 w-4 mr-2" /> Upload CSV / Excel (Admin)
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            Admin upload — FAST-NUCES Time Table (FSC_TT) or Exam Datesheet, auto-detected and shared with all students.
+          </p>
+        </div>
+      ) : (
+        <div className="pt-6 border-t border-purple-500/20 text-center">
+          <p className="text-xs text-muted-foreground">
+            Timetable & datesheet are managed by the campus admin.
+          </p>
+        </div>
+      )}
     </div>
   );
 };
