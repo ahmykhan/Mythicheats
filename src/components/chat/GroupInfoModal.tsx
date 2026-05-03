@@ -72,10 +72,9 @@ const GroupInfoModal: React.FC<GroupInfoModalProps> = ({
     if (!parts) return;
 
     const userIds = parts.map((p) => p.user_id);
-    const { data: usernames } = await supabase
-      .from("usernames")
-      .select("user_id, username")
-      .in("user_id", userIds);
+    const { data: usernames } = await supabase.rpc("get_usernames_by_ids", {
+      _user_ids: userIds,
+    });
 
     const usernameMap = new Map(
       (usernames || []).map((u) => [u.user_id, u.username])
@@ -118,11 +117,9 @@ const GroupInfoModal: React.FC<GroupInfoModalProps> = ({
     if (!searchQuery.trim()) return;
     setLoading(true);
     try {
-      const { data } = await supabase
-        .from("usernames")
-        .select("user_id, username")
-        .ilike("username", `%${searchQuery.trim()}%`)
-        .limit(10);
+      const { data } = await supabase.rpc("search_usernames", {
+        search_query: searchQuery.trim(),
+      });
 
       const participantIds = new Set(participants.map((p) => p.user_id));
       setSearchResults(

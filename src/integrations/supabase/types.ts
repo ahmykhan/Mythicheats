@@ -316,6 +316,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       usernames: {
         Row: {
           created_at: string
@@ -384,13 +405,48 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_usernames: {
+        Row: {
+          user_id: string | null
+          username: string | null
+        }
+        Insert: {
+          user_id?: string | null
+          username?: string | null
+        }
+        Update: {
+          user_id?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      get_usernames_by_ids: {
+        Args: { _user_ids: string[] }
+        Returns: {
+          user_id: string
+          username: string
+        }[]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_admin: { Args: never; Returns: boolean }
       is_room_member: {
         Args: { _room_id: string; _user_id: string }
         Returns: boolean
+      }
+      search_usernames: {
+        Args: { search_query: string }
+        Returns: {
+          user_id: string
+          username: string
+        }[]
       }
       search_users: {
         Args: { search_query: string }
@@ -402,7 +458,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -529,6 +585,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
