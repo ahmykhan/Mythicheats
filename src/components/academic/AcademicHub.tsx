@@ -507,7 +507,7 @@ const AcademicHub: React.FC = () => {
           <Upload className="h-4 w-4 mr-2" /> Upload CSV / Excel
         </Button>
         <p className="text-xs text-muted-foreground">
-          File should contain a Timetable sheet (with Section, Day, Time, Course, Room columns) and an Exam Datesheet sheet in FAST-NUCES format.
+          Upload your FAST-NUCES Time Table (FSC_TT) or Exam Datesheet — the format is auto-detected.
         </p>
       </div>
     </div>
