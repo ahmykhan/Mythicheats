@@ -117,11 +117,9 @@ const GroupInfoModal: React.FC<GroupInfoModalProps> = ({
     if (!searchQuery.trim()) return;
     setLoading(true);
     try {
-      const { data } = await supabase
-        .from("usernames")
-        .select("user_id, username")
-        .ilike("username", `%${searchQuery.trim()}%`)
-        .limit(10);
+      const { data } = await supabase.rpc("search_usernames", {
+        search_query: searchQuery.trim(),
+      });
 
       const participantIds = new Set(participants.map((p) => p.user_id));
       setSearchResults(
