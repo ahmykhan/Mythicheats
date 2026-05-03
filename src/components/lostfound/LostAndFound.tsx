@@ -96,10 +96,9 @@ const LostAndFound: React.FC<LostAndFoundProps> = ({ onNavigateToDM }) => {
       // Fetch usernames for all unique user_ids
       const userIds = [...new Set((data || []).map((i) => i.user_id))];
       if (userIds.length > 0) {
-        const { data: names } = await supabase
-          .from("usernames")
-          .select("user_id, username")
-          .in("user_id", userIds);
+        const { data: names } = await supabase.rpc("get_usernames_by_ids", {
+          _user_ids: userIds,
+        });
         const map: Record<string, string> = {};
         (names || []).forEach((n) => (map[n.user_id] = n.username));
         setUsernames(map);
