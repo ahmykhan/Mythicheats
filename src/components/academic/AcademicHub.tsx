@@ -12,13 +12,12 @@ import html2canvas from "html2canvas";
 const SECTIONS = ["BAI-2A2", "BCS-4A", "BSE-6B"];
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
-interface TimetableRow {
-  Section?: string;
-  Day?: string;
-  Time?: string;
-  Course?: string;
-  Room?: string;
-  [k: string]: any;
+interface TimetableSlot {
+  day: string;
+  time: string;
+  course: string;
+  section: string;
+  raw: string;
 }
 
 interface DatesheetEntry {
@@ -30,9 +29,73 @@ interface DatesheetEntry {
   courseTitle: string;
 }
 
+const flattenRow = (r: any[]) =>
+  (r || []).map((c) => String(c ?? "").trim()).join(" | ").toLowerCase();
+
+const detectFormat = (rows: any[][]): "timetable" | "datesheet" | "unknown" => {
+  const head = rows.slice(0, 6).map(flattenRow).join(" \n ");
+  if (head.includes("periods") || head.includes("08:30-10:00") || head.includes("08:30 - 10:00")) {
+    return "timetable";
+  }
+  if (head.includes("09:00 - 12:00") || head.includes("1:00 - 4:00") || head.includes("09:00-12:00")) {
+    return "datesheet";
+  }
+  return "unknown";
+};
+
+// FSC_TT timetable parser: find "Days" header row, then map columns -> time periods
+const parseTimetable = (rows: any[][]): TimetableSlot[] => {
+  const slots: TimetableSlot[] = [];
+  let headerIdx = -1;
+  for (let i = 0; i < rows.length; i++) {
+    const first = String(rows[i]?.[0] ?? "").trim().toLowerCase();
+    if (first === "days" || first.startsWith("day")) {
+      headerIdx = i;
+      break;
+    }
+  }
+  if (headerIdx === -1) return slots;
+
+  const headerRow = rows[headerIdx];
+  const periods: { col: number; time: string }[] = [];
+  for (let c = 1; c < headerRow.length; c++) {
+    const t = String(headerRow[c] ?? "").trim();
+    if (t) periods.push({ col: c, time: t });
+  }
+
+  const cellRegex = /^(.*?)\s*\(([^)]+)\)\s*$/;
+
+  for (let i = headerIdx + 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r) continue;
+    const day = String(r[0] ?? "").trim();
+    if (!day) continue;
+    for (const p of periods) {
+      const cell = String(r[p.col] ?? "").trim();
+      if (!cell) continue;
+      // Cell may contain multiple offerings separated by newlines or "/"
+      const parts = cell.split(/\n|;/).map((s) => s.trim()).filter(Boolean);
+      for (const part of parts) {
+        const m = part.match(cellRegex);
+        if (m) {
+          slots.push({
+            day,
+            time: p.time,
+            course: m[1].trim(),
+            section: m[2].trim(),
+            raw: part,
+          });
+        } else {
+          slots.push({ day, time: p.time, course: part, section: "", raw: part });
+        }
+      }
+    }
+  }
+  return slots;
+};
+
 const parseDatesheet = (rows: any[][]): DatesheetEntry[] => {
   const entries: DatesheetEntry[] = [];
-  // skip first 2 header rows
   for (let i = 2; i < rows.length; i++) {
     const r = rows[i];
     if (!r || r.length === 0) continue;
@@ -67,95 +130,104 @@ const AcademicHub: React.FC = () => {
   const [view, setView] = useState<"timetable" | "datesheet">("timetable");
 
   // Timetable
-  const [timetableRows, setTimetableRows] = useState<TimetableRow[]>([]);
+  const [timetableData, setTimetableData] = useState<TimetableSlot[]>([]);
   const [selectedSection, setSelectedSection] = useState<string>(SECTIONS[0]);
   const timetableRef = useRef<HTMLDivElement>(null);
 
   // Datesheet
-  const [datesheet, setDatesheet] = useState<DatesheetEntry[]>([]);
+  const [datesheetData, setDatesheetData] = useState<DatesheetEntry[]>([]);
   const [selectedCodes, setSelectedCodes] = useState<string[]>([]);
   const [codeInput, setCodeInput] = useState("");
   const datesheetRef = useRef<HTMLDivElement>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const ingestRows = (rows: any[][], sourceName: string) => {
+    const fmt = detectFormat(rows);
+    if (fmt === "timetable") {
+      const slots = parseTimetable(rows);
+      setTimetableData(slots);
+      toast({
+        title: "Timetable loaded",
+        description: `${sourceName}: ${slots.length} class slots parsed.`,
+      });
+    } else if (fmt === "datesheet") {
+      const entries = parseDatesheet(rows);
+      setDatesheetData(entries);
+      toast({
+        title: "Datesheet loaded",
+        description: `${sourceName}: ${entries.length} exam entries parsed.`,
+      });
+    } else {
+      toast({
+        title: "Unknown format",
+        description: "Could not detect Timetable or Datesheet headers in this file.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleFile = (file: File) => {
+    if (file.name.toLowerCase().endsWith(".csv")) {
+      Papa.parse(file, {
+        complete: (results) => {
+          ingestRows(results.data as any[][], file.name);
+        },
+      });
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (e) => {
       const data = e.target?.result;
       if (!data) return;
       try {
         const wb = XLSX.read(data, { type: "binary" });
-
-        // Timetable: try sheet named "Timetable" or first sheet, parse as objects
-        const tSheetName = wb.SheetNames.find((n) => /timetable/i.test(n)) || wb.SheetNames[0];
-        const tSheet = wb.Sheets[tSheetName];
-        const tJson = XLSX.utils.sheet_to_json<TimetableRow>(tSheet, { defval: "" });
-        setTimetableRows(tJson);
-
-        // Datesheet: sheet named Datesheet/Exam or second sheet, raw rows
-        const dSheetName =
-          wb.SheetNames.find((n) => /datesheet|exam/i.test(n)) ||
-          wb.SheetNames[1] ||
-          wb.SheetNames[0];
-        const dSheet = wb.Sheets[dSheetName];
-        const dRows = XLSX.utils.sheet_to_json<any[]>(dSheet, { header: 1, defval: "" });
-        setDatesheet(parseDatesheet(dRows));
-
-        toast({
-          title: "Upload successful",
-          description: `Loaded ${tJson.length} timetable rows and ${parseDatesheet(dRows).length} exam entries.`,
-        });
+        // Iterate every sheet — detect & ingest each
+        let matched = false;
+        for (const name of wb.SheetNames) {
+          const sheet = wb.Sheets[name];
+          const rows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1, defval: "" });
+          const fmt = detectFormat(rows);
+          if (fmt !== "unknown") {
+            ingestRows(rows, `${file.name} → ${name}`);
+            matched = true;
+          }
+        }
+        if (!matched) {
+          toast({
+            title: "Unknown format",
+            description: "No sheet matched Timetable or Datesheet headers.",
+            variant: "destructive",
+          });
+        }
       } catch (err: any) {
         toast({ title: "Parse error", description: err.message, variant: "destructive" });
       }
     };
-
-    if (file.name.endsWith(".csv")) {
-      Papa.parse(file, {
-        complete: (results) => {
-          // Treat as a single sheet for both: try to parse with header for timetable AND raw for datesheet
-          const rawRows = results.data as any[][];
-          // Timetable: first row as headers
-          const headers = rawRows[0] || [];
-          const tJson: TimetableRow[] = rawRows.slice(1).map((r) => {
-            const obj: TimetableRow = {};
-            headers.forEach((h: string, idx: number) => {
-              obj[String(h).trim()] = r[idx];
-            });
-            return obj;
-          });
-          setTimetableRows(tJson);
-          setDatesheet(parseDatesheet(rawRows));
-          toast({ title: "CSV loaded", description: `${tJson.length} rows parsed.` });
-        },
-      });
-    } else {
-      reader.readAsBinaryString(file);
-    }
+    reader.readAsBinaryString(file);
   };
 
-  // Timetable: filter rows by selected section, build day->slots
+  // Timetable: filter by selected section, group by day
   const timetableBySection = useMemo(() => {
-    const filtered = timetableRows.filter(
-      (r) => String(r.Section || r.section || "").trim().toUpperCase() === selectedSection.toUpperCase()
+    const filtered = timetableData.filter(
+      (s) => s.section.toUpperCase() === selectedSection.toUpperCase()
     );
-    const byDay: Record<string, TimetableRow[]> = {};
+    const byDay: Record<string, TimetableSlot[]> = {};
     DAYS.forEach((d) => (byDay[d] = []));
-    filtered.forEach((r) => {
-      const day = String(r.Day || r.day || "").trim();
-      const matchedDay = DAYS.find((d) => d.toLowerCase() === day.toLowerCase());
-      if (matchedDay) byDay[matchedDay].push(r);
+    filtered.forEach((s) => {
+      const matched = DAYS.find((d) => d.toLowerCase() === s.day.toLowerCase());
+      if (matched) byDay[matched].push(s);
     });
     return byDay;
-  }, [timetableRows, selectedSection]);
+  }, [timetableData, selectedSection]);
 
   // Datesheet: unique course codes for autocomplete
   const allCodes = useMemo(() => {
     const set = new Set<string>();
-    datesheet.forEach((e) => set.add(e.courseCode));
+    datesheetData.forEach((e) => set.add(e.courseCode));
     return Array.from(set).sort();
-  }, [datesheet]);
+  }, [datesheetData]);
+
 
   const codeSuggestions = useMemo(() => {
     if (!codeInput.trim()) return [];
@@ -179,10 +251,10 @@ const AcademicHub: React.FC = () => {
 
   const filteredDatesheet = useMemo(() => {
     if (selectedCodes.length === 0) return [];
-    return datesheet.filter((e) =>
+    return datesheetData.filter((e) =>
       selectedCodes.some((c) => c.toLowerCase() === e.courseCode.toLowerCase())
     );
-  }, [datesheet, selectedCodes]);
+  }, [datesheetData, selectedCodes]);
 
   const downloadPNG = async (ref: React.RefObject<HTMLDivElement>, name: string) => {
     if (!ref.current) return;
@@ -280,11 +352,11 @@ const AcademicHub: React.FC = () => {
                           key={i}
                           className="rounded-lg bg-purple-600/15 border border-purple-500/30 p-2 text-xs"
                         >
-                          <div className="text-purple-200 font-bold">{slot.Time || slot.time}</div>
-                          <div className="text-foreground">{slot.Course || slot.course}</div>
-                          {(slot.Room || slot.room) && (
+                          <div className="text-purple-200 font-bold">{slot.time}</div>
+                          <div className="text-foreground">{slot.course}</div>
+                          {slot.section && (
                             <div className="text-muted-foreground text-[10px]">
-                              {slot.Room || slot.room}
+                              {slot.section}
                             </div>
                           )}
                         </div>
@@ -294,7 +366,7 @@ const AcademicHub: React.FC = () => {
                 </div>
               ))}
             </div>
-            {timetableRows.length === 0 && (
+            {timetableData.length === 0 && (
               <p className="text-sm text-muted-foreground text-center mt-4">
                 Upload a CSV/Excel file at the bottom of the page to populate.
               </p>
@@ -435,7 +507,7 @@ const AcademicHub: React.FC = () => {
           <Upload className="h-4 w-4 mr-2" /> Upload CSV / Excel
         </Button>
         <p className="text-xs text-muted-foreground">
-          File should contain a Timetable sheet (with Section, Day, Time, Course, Room columns) and an Exam Datesheet sheet in FAST-NUCES format.
+          Upload your FAST-NUCES Time Table (FSC_TT) or Exam Datesheet — the format is auto-detected.
         </p>
       </div>
     </div>

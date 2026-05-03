@@ -18,7 +18,7 @@ import {
   Calculator,
   CalendarDays
 } from "lucide-react";
-import ContentViewer from "./content/ContentViewer";
+
 import ChatContainer from "./chat/ChatContainer";
 import NotificationCenter from "./notifications/NotificationCenter";
 import ProfileSettings from "./profile/ProfileSettings";
