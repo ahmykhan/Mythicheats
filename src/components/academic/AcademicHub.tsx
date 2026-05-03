@@ -47,66 +47,64 @@ const detectFormat = (rows: any[][]): "timetable" | "datesheet" | "unknown" => {
 };
 
 // FSC_TT timetable parser:
-// - Find the row whose first non-empty cell is "Days"
-// - Map subsequent columns to fixed time slots: 08:30, 10:00, 11:30, 13:00, 14:30, 16:00
-// - Extract every (SECTION) and optional [ROOM]/(ROOM) from each cell
+// - Find header row where Col A == "Days" and Col B == "Room"
+// - Time slot columns start at col 2 (third column). Each period (08:30-10:00, etc.)
+//   spans 6 sub-columns (10/20/30/40/50/60), but for our purposes we map each
+//   period to its single starting time. We detect period boundaries from the
+//   row ABOVE "Days" (the period header row).
+// - Extract every (SECTION) using regex; course name = text before first '('.
 const parseTimetable = (rows: any[][]): TimetableSlot[] => {
   const slots: TimetableSlot[] = [];
   let headerIdx = -1;
   for (let i = 0; i < rows.length; i++) {
-    const found = (rows[i] || []).some(
-      (c) => String(c ?? "").trim().toLowerCase() === "days"
-    );
-    if (found) {
-      headerIdx = i;
-      break;
-    }
+    const r = rows[i] || [];
+    const a = String(r[0] ?? "").trim().toLowerCase();
+    const b = String(r[1] ?? "").trim().toLowerCase();
+    if (a === "days" && b.startsWith("room")) { headerIdx = i; break; }
+    if (a === "days") { headerIdx = i; break; }
   }
   if (headerIdx === -1) return slots;
 
-  const headerRow = rows[headerIdx];
-  // Find which column has "Days"
-  const daysCol = headerRow.findIndex(
-    (c) => String(c ?? "").trim().toLowerCase() === "days"
-  );
+  // Build column→time map from the period header row above "Days"
+  const periodRow = rows[headerIdx - 1] || [];
+  const colToTime: Record<number, string> = {};
+  let lastTime = "";
+  for (let c = 0; c < Math.max(periodRow.length, 60); c++) {
+    const v = String(periodRow[c] ?? "").trim();
+    const m = v.match(/(\d{1,2}:\d{2})\s*[-–]\s*\d{1,2}:\d{2}/);
+    if (m) lastTime = m[1];
+    if (lastTime && c >= 2) colToTime[c] = lastTime;
+  }
+  // Fallback: if no period row detected, assume strict 6-col blocks starting at col 2
+  if (Object.keys(colToTime).length === 0) {
+    for (let t = 0; t < TIME_SLOTS.length; t++) {
+      for (let s = 0; s < 6; s++) colToTime[2 + t * 6 + s] = TIME_SLOTS[t];
+    }
+  }
 
   for (let i = headerIdx + 1; i < rows.length; i++) {
     const r = rows[i];
     if (!r) continue;
-    const day = String(r[daysCol] ?? "").trim();
+    const day = String(r[0] ?? "").trim();
+    const room = String(r[1] ?? "").trim();
     if (!day || !DAYS.some((d) => d.toLowerCase() === day.toLowerCase())) continue;
 
-    for (let t = 0; t < TIME_SLOTS.length; t++) {
-      const colIdx = daysCol + 1 + t;
-      const cell = String(r[colIdx] ?? "").trim();
+    for (let c = 2; c < r.length; c++) {
+      const cell = String(r[c] ?? "").trim();
       if (!cell) continue;
-      const time = TIME_SLOTS[t];
+      const time = colToTime[c];
+      if (!time) continue;
 
       const parts = cell.split(/\n|;/).map((s) => s.trim()).filter(Boolean);
       for (const part of parts) {
-        const sectionRe = /\(([^)]+)\)/g;
-        const matches = Array.from(part.matchAll(sectionRe)).map((m) => m[1].trim());
-        // Heuristic: room is often the LAST parenthetical group (e.g. "C-105")
-        // Sections look like "BCS-2A" / "BAI-2A2"; rooms often look like "C-105"/"R-12".
-        const sectionRx = /^[A-Z]{2,4}-[0-9][A-Z0-9]*$/;
-        const sections = matches.filter((m) => sectionRx.test(m.toUpperCase()));
-        const rooms = matches.filter((m) => !sectionRx.test(m.toUpperCase()));
-        const room = rooms.length > 0 ? rooms[rooms.length - 1] : "";
-        const courseName = part.replace(/\([^)]*\)/g, "").trim();
-
+        const matches = Array.from(part.matchAll(/\(([^)]+)\)/g)).map((m) => m[1].trim());
+        const sectionRx = /^[A-Z]{2,4}-[0-9][A-Z0-9]*$/i;
+        const sections = matches.filter((m) => sectionRx.test(m));
+        const courseName = part.split("(")[0].trim();
         if (sections.length > 0) {
           for (const s of sections) {
-            slots.push({
-              day,
-              time,
-              course: courseName,
-              section: s.toUpperCase(),
-              room,
-              raw: part,
-            });
+            slots.push({ day, time, course: courseName, section: s.toUpperCase(), room, raw: part });
           }
-        } else {
-          slots.push({ day, time, course: courseName || part, section: "", room, raw: part });
         }
       }
     }
@@ -166,15 +164,15 @@ const AcademicHub: React.FC<AcademicHubProps> = ({ isAdmin = false }) => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load shared campus_data on mount so all students see admin-uploaded data
+  // Load shared campus_master_data on mount so all students see admin-uploaded data
   useEffect(() => {
     (async () => {
-      const { data, error } = await supabase
-        .from("campus_data")
+      const { data, error } = await (supabase as any)
+        .from("campus_master_data")
         .select("key, data")
         .in("key", ["timetable", "datesheet"]);
       if (error) {
-        console.error("Failed to load campus_data:", error);
+        console.error("Failed to load campus_master_data:", error);
         return;
       }
       for (const row of data || []) {
@@ -190,7 +188,7 @@ const AcademicHub: React.FC<AcademicHubProps> = ({ isAdmin = false }) => {
   const persist = async (key: "timetable" | "datesheet", data: any) => {
     const { data: { user } } = await supabase.auth.getUser();
     const { error } = await (supabase as any)
-      .from("campus_data")
+      .from("campus_master_data")
       .upsert({ key, data, updated_at: new Date().toISOString(), updated_by: user?.id ?? null });
     if (error) {
       toast({
