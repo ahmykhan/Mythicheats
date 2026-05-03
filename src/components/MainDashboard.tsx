@@ -159,9 +159,9 @@ const MainDashboard: React.FC<MainDashboardProps> = ({ username, userEmail, onLo
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-7 max-w-5xl mx-auto">
-            <TabsTrigger value="courses" className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4" />
-              <span className="hidden sm:inline">Courses</span>
+            <TabsTrigger value="academic" className="flex items-center gap-2">
+              <CalendarDays className="h-4 w-4" />
+              <span className="hidden sm:inline">Academic Hub</span>
             </TabsTrigger>
             <TabsTrigger value="past-papers" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
