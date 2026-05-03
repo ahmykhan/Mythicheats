@@ -1,16 +1,18 @@
-import React, { useRef, useState, useMemo } from "react";
+import React, { useRef, useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, CalendarDays, Download, Upload, X, Search } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 import Papa from "papaparse";
 import html2canvas from "html2canvas";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-const SECTION_REGEX = /\(([A-Z]{2,4}-[0-9][A-Z0-9]+)\)/g;
+const TIME_SLOTS = ["08:30", "10:00", "11:30", "13:00", "14:30", "16:00"];
+const SECTION_REGEX = /\(([^)]+)\)/g;
 
 interface TimetableSlot {
   day: string;
