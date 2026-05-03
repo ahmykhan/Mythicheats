@@ -167,7 +167,7 @@ const AcademicHub: React.FC<AcademicHubProps> = ({ isAdmin = false }) => {
   // Load shared campus_master_data on mount so all students see admin-uploaded data
   useEffect(() => {
     (async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("campus_master_data")
         .select("key, data")
         .in("key", ["timetable", "datesheet"]);
