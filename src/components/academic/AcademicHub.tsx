@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 import Papa from "papaparse";
 import html2canvas from "html2canvas";
+import { parseFastTimetableRows } from "@/utils/timetableParser";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const TIME_SLOTS = ["08:30", "10:00", "11:30", "13:00", "14:30", "16:00"];
