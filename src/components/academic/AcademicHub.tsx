@@ -251,10 +251,10 @@ const AcademicHub: React.FC = () => {
 
   const filteredDatesheet = useMemo(() => {
     if (selectedCodes.length === 0) return [];
-    return datesheet.filter((e) =>
+    return datesheetData.filter((e) =>
       selectedCodes.some((c) => c.toLowerCase() === e.courseCode.toLowerCase())
     );
-  }, [datesheet, selectedCodes]);
+  }, [datesheetData, selectedCodes]);
 
   const downloadPNG = async (ref: React.RefObject<HTMLDivElement>, name: string) => {
     if (!ref.current) return;
