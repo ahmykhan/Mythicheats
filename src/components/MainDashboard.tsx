@@ -37,7 +37,7 @@ interface MainDashboardProps {
 const ADMIN_EMAIL = "furyboy4592@gmail.com";
 
 const MainDashboard: React.FC<MainDashboardProps> = ({ username, userEmail, onLogout }) => {
-  const [activeTab, setActiveTab] = useState("courses");
+  const [activeTab, setActiveTab] = useState("academic");
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState(
