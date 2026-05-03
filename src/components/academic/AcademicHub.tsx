@@ -1,22 +1,25 @@
-import React, { useRef, useState, useMemo } from "react";
+import React, { useRef, useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, CalendarDays, Download, Upload, X, Search } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 import Papa from "papaparse";
 import html2canvas from "html2canvas";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-const SECTION_REGEX = /\(([A-Z]{2,4}-[0-9][A-Z0-9]+)\)/g;
+const TIME_SLOTS = ["08:30", "10:00", "11:30", "13:00", "14:30", "16:00"];
+const SECTION_REGEX = /\(([^)]+)\)/g;
 
 interface TimetableSlot {
   day: string;
   time: string;
   course: string;
   section: string;
+  room: string;
   raw: string;
 }
 
@@ -43,13 +46,18 @@ const detectFormat = (rows: any[][]): "timetable" | "datesheet" | "unknown" => {
   return "unknown";
 };
 
-// FSC_TT timetable parser: find "Days" header row, then map columns -> time periods
+// FSC_TT timetable parser:
+// - Find the row whose first non-empty cell is "Days"
+// - Map subsequent columns to fixed time slots: 08:30, 10:00, 11:30, 13:00, 14:30, 16:00
+// - Extract every (SECTION) and optional [ROOM]/(ROOM) from each cell
 const parseTimetable = (rows: any[][]): TimetableSlot[] => {
   const slots: TimetableSlot[] = [];
   let headerIdx = -1;
   for (let i = 0; i < rows.length; i++) {
-    const first = String(rows[i]?.[0] ?? "").trim().toLowerCase();
-    if (first === "days" || first.startsWith("day")) {
+    const found = (rows[i] || []).some(
+      (c) => String(c ?? "").trim().toLowerCase() === "days"
+    );
+    if (found) {
       headerIdx = i;
       break;
     }
@@ -57,38 +65,48 @@ const parseTimetable = (rows: any[][]): TimetableSlot[] => {
   if (headerIdx === -1) return slots;
 
   const headerRow = rows[headerIdx];
-  const periods: { col: number; time: string }[] = [];
-  for (let c = 1; c < headerRow.length; c++) {
-    const t = String(headerRow[c] ?? "").trim();
-    if (t) periods.push({ col: c, time: t });
-  }
-
-  const sectionInCell = /\(([^)]+)\)/g;
+  // Find which column has "Days"
+  const daysCol = headerRow.findIndex(
+    (c) => String(c ?? "").trim().toLowerCase() === "days"
+  );
 
   for (let i = headerIdx + 1; i < rows.length; i++) {
     const r = rows[i];
     if (!r) continue;
-    const day = String(r[0] ?? "").trim();
-    if (!day) continue;
-    for (const p of periods) {
-      const cell = String(r[p.col] ?? "").trim();
+    const day = String(r[daysCol] ?? "").trim();
+    if (!day || !DAYS.some((d) => d.toLowerCase() === day.toLowerCase())) continue;
+
+    for (let t = 0; t < TIME_SLOTS.length; t++) {
+      const colIdx = daysCol + 1 + t;
+      const cell = String(r[colIdx] ?? "").trim();
       if (!cell) continue;
+      const time = TIME_SLOTS[t];
+
       const parts = cell.split(/\n|;/).map((s) => s.trim()).filter(Boolean);
       for (const part of parts) {
-        const matches = Array.from(part.matchAll(sectionInCell));
+        const sectionRe = /\(([^)]+)\)/g;
+        const matches = Array.from(part.matchAll(sectionRe)).map((m) => m[1].trim());
+        // Heuristic: room is often the LAST parenthetical group (e.g. "C-105")
+        // Sections look like "BCS-2A" / "BAI-2A2"; rooms often look like "C-105"/"R-12".
+        const sectionRx = /^[A-Z]{2,4}-[0-9][A-Z0-9]*$/;
+        const sections = matches.filter((m) => sectionRx.test(m.toUpperCase()));
+        const rooms = matches.filter((m) => !sectionRx.test(m.toUpperCase()));
+        const room = rooms.length > 0 ? rooms[rooms.length - 1] : "";
         const courseName = part.replace(/\([^)]*\)/g, "").trim();
-        if (matches.length > 0) {
-          for (const m of matches) {
+
+        if (sections.length > 0) {
+          for (const s of sections) {
             slots.push({
               day,
-              time: p.time,
+              time,
               course: courseName,
-              section: m[1].trim(),
+              section: s.toUpperCase(),
+              room,
               raw: part,
             });
           }
         } else {
-          slots.push({ day, time: p.time, course: part, section: "", raw: part });
+          slots.push({ day, time, course: courseName || part, section: "", room, raw: part });
         }
       }
     }
@@ -127,7 +145,11 @@ const parseDatesheet = (rows: any[][]): DatesheetEntry[] => {
   return entries;
 };
 
-const AcademicHub: React.FC = () => {
+interface AcademicHubProps {
+  isAdmin?: boolean;
+}
+
+const AcademicHub: React.FC<AcademicHubProps> = ({ isAdmin = false }) => {
   const { toast } = useToast();
   const [view, setView] = useState<"timetable" | "datesheet">("timetable");
 
@@ -144,6 +166,41 @@ const AcademicHub: React.FC = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Load shared campus_data on mount so all students see admin-uploaded data
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase
+        .from("campus_data")
+        .select("key, data")
+        .in("key", ["timetable", "datesheet"]);
+      if (error) {
+        console.error("Failed to load campus_data:", error);
+        return;
+      }
+      for (const row of data || []) {
+        if (row.key === "timetable" && Array.isArray(row.data)) {
+          setTimetableData(row.data as unknown as TimetableSlot[]);
+        } else if (row.key === "datesheet" && Array.isArray(row.data)) {
+          setDatesheetData(row.data as unknown as DatesheetEntry[]);
+        }
+      }
+    })();
+  }, []);
+
+  const persist = async (key: "timetable" | "datesheet", data: any) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await (supabase as any)
+      .from("campus_data")
+      .upsert({ key, data, updated_at: new Date().toISOString(), updated_by: user?.id ?? null });
+    if (error) {
+      toast({
+        title: "Could not save to campus data",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const ingestRows = (rows: any[][], sourceName: string) => {
     const fmt = detectFormat(rows);
     if (fmt === "timetable") {
@@ -153,6 +210,7 @@ const AcademicHub: React.FC = () => {
         title: "Timetable loaded",
         description: `${sourceName}: ${slots.length} class slots parsed.`,
       });
+      if (isAdmin) persist("timetable", slots);
     } else if (fmt === "datesheet") {
       const entries = parseDatesheet(rows);
       setDatesheetData(entries);
@@ -160,6 +218,7 @@ const AcademicHub: React.FC = () => {
         title: "Datesheet loaded",
         description: `${sourceName}: ${entries.length} exam entries parsed.`,
       });
+      if (isAdmin) persist("datesheet", entries);
     } else {
       toast({
         title: "Unknown format",
@@ -382,6 +441,9 @@ const AcademicHub: React.FC = () => {
                         >
                           <div className="text-purple-200 font-bold">{slot.time}</div>
                           <div className="text-foreground">{slot.course}</div>
+                          {slot.room && (
+                            <div className="text-amber-200/80 text-[10px]">Room {slot.room}</div>
+                          )}
                           {slot.section && (
                             <div className="text-muted-foreground text-[10px]">
                               {slot.section}
@@ -515,29 +577,37 @@ const AcademicHub: React.FC = () => {
         </div>
       )}
 
-      {/* Upload at the bottom — populates BOTH timetable & datesheet */}
-      <div className="flex flex-col items-center gap-2 pt-6 border-t border-purple-500/20">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".csv,.xlsx,.xls"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) handleFile(f);
-            e.target.value = "";
-          }}
-        />
-        <Button
-          onClick={() => fileInputRef.current?.click()}
-          className="bg-purple-600 hover:bg-purple-500 text-white"
-        >
-          <Upload className="h-4 w-4 mr-2" /> Upload CSV / Excel
-        </Button>
-        <p className="text-xs text-muted-foreground">
-          Upload your FAST-NUCES Time Table (FSC_TT) or Exam Datesheet — the format is auto-detected.
-        </p>
-      </div>
+      {/* Upload at the bottom — admin only. Students just see the data. */}
+      {isAdmin ? (
+        <div className="flex flex-col items-center gap-2 pt-6 border-t border-purple-500/20">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,.xlsx,.xls"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleFile(f);
+              e.target.value = "";
+            }}
+          />
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            className="bg-purple-600 hover:bg-purple-500 text-white"
+          >
+            <Upload className="h-4 w-4 mr-2" /> Upload CSV / Excel (Admin)
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            Admin upload — FAST-NUCES Time Table (FSC_TT) or Exam Datesheet, auto-detected and shared with all students.
+          </p>
+        </div>
+      ) : (
+        <div className="pt-6 border-t border-purple-500/20 text-center">
+          <p className="text-xs text-muted-foreground">
+            Timetable & datesheet are managed by the campus admin.
+          </p>
+        </div>
+      )}
     </div>
   );
 };
