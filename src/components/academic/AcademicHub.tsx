@@ -358,7 +358,7 @@ const AcademicHub: React.FC = () => {
             style={{ fontFamily: "'Space Mono', ui-monospace, monospace" }}
           >
             <h3 className="text-lg font-bold text-foreground mb-4 tracking-wide">
-              {selectedSection} — Weekly Timetable
+              {selectedSection ? `${selectedSection} — Weekly Timetable` : "Weekly Timetable"}
             </h3>
             <div className="grid grid-cols-5 gap-3">
               {DAYS.map((day) => (
