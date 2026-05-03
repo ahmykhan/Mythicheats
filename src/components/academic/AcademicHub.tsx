@@ -327,12 +327,16 @@ const AcademicHub: React.FC = () => {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <label className="text-sm text-muted-foreground">Select Section</label>
-              <Select value={selectedSection} onValueChange={setSelectedSection}>
-                <SelectTrigger className="w-[180px] border-purple-500/30 bg-card/40">
-                  <SelectValue />
+              <Select
+                value={selectedSection}
+                onValueChange={setSelectedSection}
+                disabled={availableSections.length === 0}
+              >
+                <SelectTrigger className="w-[200px] border-purple-500/30 bg-card/40">
+                  <SelectValue placeholder={availableSections.length === 0 ? "Upload file first" : "Select section"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {SECTIONS.map((s) => (
+                  {availableSections.map((s) => (
                     <SelectItem key={s} value={s}>{s}</SelectItem>
                   ))}
                 </SelectContent>
