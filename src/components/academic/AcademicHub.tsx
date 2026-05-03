@@ -250,17 +250,50 @@ const AcademicHub: React.FC<AcademicHubProps> = ({ isAdmin = false }) => {
       if (!data) return;
       try {
         const wb = XLSX.read(data, { type: "binary" });
-        // Iterate every sheet — detect & ingest each
         let matched = false;
+
+        // 1. Target "Combined TT" sheet (or first sheet) for the timetable
+        const ttName =
+          wb.SheetNames.find((n) => n.toLowerCase().includes("combined")) ||
+          wb.SheetNames.find((n) => n.toLowerCase().includes("tt")) ||
+          wb.SheetNames[0];
+        if (ttName) {
+          const sheet = wb.Sheets[ttName];
+          const rows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1, defval: "" });
+          const parsed = parseFastTimetableRows(rows);
+          if (parsed.length > 0) {
+            const slots: TimetableSlot[] = parsed.map((p) => ({
+              day: p.day,
+              time: p.time,
+              course: p.course,
+              section: p.section,
+              room: p.room,
+              raw: `${p.course} (${p.section})${p.instructor ? `: ${p.instructor}` : ""}`,
+            }));
+            setTimetableData(slots);
+            toast({
+              title: "Timetable loaded",
+              description: `${file.name} → ${ttName}: ${slots.length} class slots parsed.`,
+            });
+            if (isAdmin) persist("timetable", slots);
+            matched = true;
+          } else {
+            console.log("No data found for sheet:", ttName);
+          }
+        }
+
+        // 2. Scan remaining sheets for a datesheet
         for (const name of wb.SheetNames) {
+          if (name === ttName) continue;
           const sheet = wb.Sheets[name];
           const rows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1, defval: "" });
           const fmt = detectFormat(rows);
-          if (fmt !== "unknown") {
+          if (fmt === "datesheet") {
             ingestRows(rows, `${file.name} → ${name}`);
             matched = true;
           }
         }
+
         if (!matched) {
           toast({
             title: "Unknown format",
