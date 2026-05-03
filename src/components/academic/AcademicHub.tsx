@@ -179,9 +179,9 @@ const AcademicHub: React.FC<AcademicHubProps> = ({ isAdmin = false }) => {
       }
       for (const row of data || []) {
         if (row.key === "timetable" && Array.isArray(row.data)) {
-          setTimetableData(row.data as TimetableSlot[]);
+          setTimetableData(row.data as unknown as TimetableSlot[]);
         } else if (row.key === "datesheet" && Array.isArray(row.data)) {
-          setDatesheetData(row.data as DatesheetEntry[]);
+          setDatesheetData(row.data as unknown as DatesheetEntry[]);
         }
       }
     })();
