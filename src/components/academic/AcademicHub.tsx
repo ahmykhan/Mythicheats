@@ -9,8 +9,8 @@ import * as XLSX from "xlsx";
 import Papa from "papaparse";
 import html2canvas from "html2canvas";
 
-const SECTIONS = ["BAI-2A2", "BCS-4A", "BSE-6B"];
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+const SECTION_REGEX = /\(([A-Z]{2,4}-[0-9][A-Z0-9]+)\)/g;
 
 interface TimetableSlot {
   day: string;
