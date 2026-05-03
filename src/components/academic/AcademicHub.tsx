@@ -63,7 +63,7 @@ const parseTimetable = (rows: any[][]): TimetableSlot[] => {
     if (t) periods.push({ col: c, time: t });
   }
 
-  const cellRegex = /^(.*?)\s*\(([^)]+)\)\s*$/;
+  const sectionInCell = /\(([^)]+)\)/g;
 
   for (let i = headerIdx + 1; i < rows.length; i++) {
     const r = rows[i];
@@ -73,18 +73,20 @@ const parseTimetable = (rows: any[][]): TimetableSlot[] => {
     for (const p of periods) {
       const cell = String(r[p.col] ?? "").trim();
       if (!cell) continue;
-      // Cell may contain multiple offerings separated by newlines or "/"
       const parts = cell.split(/\n|;/).map((s) => s.trim()).filter(Boolean);
       for (const part of parts) {
-        const m = part.match(cellRegex);
-        if (m) {
-          slots.push({
-            day,
-            time: p.time,
-            course: m[1].trim(),
-            section: m[2].trim(),
-            raw: part,
-          });
+        const matches = Array.from(part.matchAll(sectionInCell));
+        const courseName = part.replace(/\([^)]*\)/g, "").trim();
+        if (matches.length > 0) {
+          for (const m of matches) {
+            slots.push({
+              day,
+              time: p.time,
+              course: courseName,
+              section: m[1].trim(),
+              raw: part,
+            });
+          }
         } else {
           slots.push({ day, time: p.time, course: part, section: "", raw: part });
         }
