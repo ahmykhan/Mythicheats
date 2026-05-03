@@ -164,15 +164,15 @@ const AcademicHub: React.FC<AcademicHubProps> = ({ isAdmin = false }) => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load shared campus_data on mount so all students see admin-uploaded data
+  // Load shared campus_master_data on mount so all students see admin-uploaded data
   useEffect(() => {
     (async () => {
       const { data, error } = await supabase
-        .from("campus_data")
+        .from("campus_master_data")
         .select("key, data")
         .in("key", ["timetable", "datesheet"]);
       if (error) {
-        console.error("Failed to load campus_data:", error);
+        console.error("Failed to load campus_master_data:", error);
         return;
       }
       for (const row of data || []) {
@@ -188,7 +188,7 @@ const AcademicHub: React.FC<AcademicHubProps> = ({ isAdmin = false }) => {
   const persist = async (key: "timetable" | "datesheet", data: any) => {
     const { data: { user } } = await supabase.auth.getUser();
     const { error } = await (supabase as any)
-      .from("campus_data")
+      .from("campus_master_data")
       .upsert({ key, data, updated_at: new Date().toISOString(), updated_by: user?.id ?? null });
     if (error) {
       toast({
