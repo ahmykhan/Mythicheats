@@ -127,12 +127,25 @@ const PWAApp: React.FC = () => {
         }
 
         if (autoUsername.length >= 3) {
-          const { error: insertError } = await supabase
+          // Try a few unique variants in case of collision
+          for (const candidate of [autoUsername, `${autoUsername}_${user.id.slice(0, 4)}`]) {
+            const { error: insertError } = await supabase
+              .from("usernames")
+              .insert({ user_id: user.id, username: candidate });
+            if (!insertError) {
+              setUsername(candidate);
+              setNeedsUsername(false);
+              return;
+            }
+          }
+          // Insert failed (likely race / row already exists) — re-fetch
+          const { data: retry } = await supabase
             .from("usernames")
-            .insert({ user_id: user.id, username: autoUsername });
-
-          if (!insertError) {
-            setUsername(autoUsername);
+            .select("username")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          if (retry?.username) {
+            setUsername(retry.username);
             setNeedsUsername(false);
             return;
           }
