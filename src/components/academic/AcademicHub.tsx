@@ -207,11 +207,33 @@ const AcademicHub: React.FC = () => {
     reader.readAsBinaryString(file);
   };
 
+  // Auto-derive sections from parsed timetable data
+  const availableSections = useMemo(() => {
+    const set = new Set<string>();
+    timetableData.forEach((s) => {
+      if (s.section) set.add(s.section.toUpperCase());
+    });
+    return Array.from(set).sort();
+  }, [timetableData]);
+
+  // Auto-select first section when data loads / changes
+  React.useEffect(() => {
+    if (availableSections.length > 0 && !availableSections.includes(selectedSection)) {
+      setSelectedSection(availableSections[0]);
+    }
+    if (availableSections.length === 0 && selectedSection) {
+      setSelectedSection("");
+    }
+  }, [availableSections, selectedSection]);
+
   // Timetable: filter by selected section, group by day
   const timetableBySection = useMemo(() => {
     const filtered = timetableData.filter(
       (s) => s.section.toUpperCase() === selectedSection.toUpperCase()
     );
+    if (timetableData.length > 0 && selectedSection && filtered.length === 0) {
+      console.log(`No data found for this section: ${selectedSection}`);
+    }
     const byDay: Record<string, TimetableSlot[]> = {};
     DAYS.forEach((d) => (byDay[d] = []));
     filtered.forEach((s) => {
