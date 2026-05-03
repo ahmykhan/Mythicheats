@@ -26,6 +26,7 @@ import PastPapers from "./pastpapers/PastPapers";
 import LostAndFound from "./lostfound/LostAndFound";
 import FastGrader from "./grader/FastGrader";
 import ThemeSelector from "./theme/ThemeSelector";
+import AcademicHub from "./academic/AcademicHub";
 
 interface MainDashboardProps {
   username: string;
