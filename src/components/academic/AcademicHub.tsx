@@ -441,6 +441,9 @@ const AcademicHub: React.FC<AcademicHubProps> = ({ isAdmin = false }) => {
                         >
                           <div className="text-purple-200 font-bold">{slot.time}</div>
                           <div className="text-foreground">{slot.course}</div>
+                          {slot.room && (
+                            <div className="text-amber-200/80 text-[10px]">Room {slot.room}</div>
+                          )}
                           {slot.section && (
                             <div className="text-muted-foreground text-[10px]">
                               {slot.section}
