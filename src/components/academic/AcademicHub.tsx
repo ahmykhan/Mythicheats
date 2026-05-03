@@ -352,11 +352,11 @@ const AcademicHub: React.FC = () => {
                           key={i}
                           className="rounded-lg bg-purple-600/15 border border-purple-500/30 p-2 text-xs"
                         >
-                          <div className="text-purple-200 font-bold">{slot.Time || slot.time}</div>
-                          <div className="text-foreground">{slot.Course || slot.course}</div>
-                          {(slot.Room || slot.room) && (
+                          <div className="text-purple-200 font-bold">{slot.time}</div>
+                          <div className="text-foreground">{slot.course}</div>
+                          {slot.section && (
                             <div className="text-muted-foreground text-[10px]">
-                              {slot.Room || slot.room}
+                              {slot.section}
                             </div>
                           )}
                         </div>
@@ -366,7 +366,7 @@ const AcademicHub: React.FC = () => {
                 </div>
               ))}
             </div>
-            {timetableRows.length === 0 && (
+            {timetableData.length === 0 && (
               <p className="text-sm text-muted-foreground text-center mt-4">
                 Upload a CSV/Excel file at the bottom of the page to populate.
               </p>
