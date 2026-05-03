@@ -145,7 +145,11 @@ const parseDatesheet = (rows: any[][]): DatesheetEntry[] => {
   return entries;
 };
 
-const AcademicHub: React.FC = () => {
+interface AcademicHubProps {
+  isAdmin?: boolean;
+}
+
+const AcademicHub: React.FC<AcademicHubProps> = ({ isAdmin = false }) => {
   const { toast } = useToast();
   const [view, setView] = useState<"timetable" | "datesheet">("timetable");
 
@@ -162,6 +166,41 @@ const AcademicHub: React.FC = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Load shared campus_data on mount so all students see admin-uploaded data
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase
+        .from("campus_data")
+        .select("key, data")
+        .in("key", ["timetable", "datesheet"]);
+      if (error) {
+        console.error("Failed to load campus_data:", error);
+        return;
+      }
+      for (const row of data || []) {
+        if (row.key === "timetable" && Array.isArray(row.data)) {
+          setTimetableData(row.data as TimetableSlot[]);
+        } else if (row.key === "datesheet" && Array.isArray(row.data)) {
+          setDatesheetData(row.data as DatesheetEntry[]);
+        }
+      }
+    })();
+  }, []);
+
+  const persist = async (key: "timetable" | "datesheet", data: any) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await (supabase as any)
+      .from("campus_data")
+      .upsert({ key, data, updated_at: new Date().toISOString(), updated_by: user?.id ?? null });
+    if (error) {
+      toast({
+        title: "Could not save to campus data",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const ingestRows = (rows: any[][], sourceName: string) => {
     const fmt = detectFormat(rows);
     if (fmt === "timetable") {
@@ -171,6 +210,7 @@ const AcademicHub: React.FC = () => {
         title: "Timetable loaded",
         description: `${sourceName}: ${slots.length} class slots parsed.`,
       });
+      if (isAdmin) persist("timetable", slots);
     } else if (fmt === "datesheet") {
       const entries = parseDatesheet(rows);
       setDatesheetData(entries);
@@ -178,6 +218,7 @@ const AcademicHub: React.FC = () => {
         title: "Datesheet loaded",
         description: `${sourceName}: ${entries.length} exam entries parsed.`,
       });
+      if (isAdmin) persist("datesheet", entries);
     } else {
       toast({
         title: "Unknown format",
