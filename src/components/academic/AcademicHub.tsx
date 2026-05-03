@@ -9,8 +9,8 @@ import * as XLSX from "xlsx";
 import Papa from "papaparse";
 import html2canvas from "html2canvas";
 
-const SECTIONS = ["BAI-2A2", "BCS-4A", "BSE-6B"];
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+const SECTION_REGEX = /\(([A-Z]{2,4}-[0-9][A-Z0-9]+)\)/g;
 
 interface TimetableSlot {
   day: string;
@@ -63,7 +63,7 @@ const parseTimetable = (rows: any[][]): TimetableSlot[] => {
     if (t) periods.push({ col: c, time: t });
   }
 
-  const cellRegex = /^(.*?)\s*\(([^)]+)\)\s*$/;
+  const sectionInCell = /\(([^)]+)\)/g;
 
   for (let i = headerIdx + 1; i < rows.length; i++) {
     const r = rows[i];
@@ -73,18 +73,20 @@ const parseTimetable = (rows: any[][]): TimetableSlot[] => {
     for (const p of periods) {
       const cell = String(r[p.col] ?? "").trim();
       if (!cell) continue;
-      // Cell may contain multiple offerings separated by newlines or "/"
       const parts = cell.split(/\n|;/).map((s) => s.trim()).filter(Boolean);
       for (const part of parts) {
-        const m = part.match(cellRegex);
-        if (m) {
-          slots.push({
-            day,
-            time: p.time,
-            course: m[1].trim(),
-            section: m[2].trim(),
-            raw: part,
-          });
+        const matches = Array.from(part.matchAll(sectionInCell));
+        const courseName = part.replace(/\([^)]*\)/g, "").trim();
+        if (matches.length > 0) {
+          for (const m of matches) {
+            slots.push({
+              day,
+              time: p.time,
+              course: courseName,
+              section: m[1].trim(),
+              raw: part,
+            });
+          }
         } else {
           slots.push({ day, time: p.time, course: part, section: "", raw: part });
         }
@@ -131,7 +133,7 @@ const AcademicHub: React.FC = () => {
 
   // Timetable
   const [timetableData, setTimetableData] = useState<TimetableSlot[]>([]);
-  const [selectedSection, setSelectedSection] = useState<string>(SECTIONS[0]);
+  const [selectedSection, setSelectedSection] = useState<string>("");
   const timetableRef = useRef<HTMLDivElement>(null);
 
   // Datesheet
@@ -207,11 +209,33 @@ const AcademicHub: React.FC = () => {
     reader.readAsBinaryString(file);
   };
 
+  // Auto-derive sections from parsed timetable data
+  const availableSections = useMemo(() => {
+    const set = new Set<string>();
+    timetableData.forEach((s) => {
+      if (s.section) set.add(s.section.toUpperCase());
+    });
+    return Array.from(set).sort();
+  }, [timetableData]);
+
+  // Auto-select first section when data loads / changes
+  React.useEffect(() => {
+    if (availableSections.length > 0 && !availableSections.includes(selectedSection)) {
+      setSelectedSection(availableSections[0]);
+    }
+    if (availableSections.length === 0 && selectedSection) {
+      setSelectedSection("");
+    }
+  }, [availableSections, selectedSection]);
+
   // Timetable: filter by selected section, group by day
   const timetableBySection = useMemo(() => {
     const filtered = timetableData.filter(
       (s) => s.section.toUpperCase() === selectedSection.toUpperCase()
     );
+    if (timetableData.length > 0 && selectedSection && filtered.length === 0) {
+      console.log(`No data found for this section: ${selectedSection}`);
+    }
     const byDay: Record<string, TimetableSlot[]> = {};
     DAYS.forEach((d) => (byDay[d] = []));
     filtered.forEach((s) => {
@@ -305,12 +329,16 @@ const AcademicHub: React.FC = () => {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <label className="text-sm text-muted-foreground">Select Section</label>
-              <Select value={selectedSection} onValueChange={setSelectedSection}>
-                <SelectTrigger className="w-[180px] border-purple-500/30 bg-card/40">
-                  <SelectValue />
+              <Select
+                value={selectedSection}
+                onValueChange={setSelectedSection}
+                disabled={availableSections.length === 0}
+              >
+                <SelectTrigger className="w-[200px] border-purple-500/30 bg-card/40">
+                  <SelectValue placeholder={availableSections.length === 0 ? "Upload file first" : "Select section"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {SECTIONS.map((s) => (
+                  {availableSections.map((s) => (
                     <SelectItem key={s} value={s}>{s}</SelectItem>
                   ))}
                 </SelectContent>
@@ -332,7 +360,7 @@ const AcademicHub: React.FC = () => {
             style={{ fontFamily: "'Space Mono', ui-monospace, monospace" }}
           >
             <h3 className="text-lg font-bold text-foreground mb-4 tracking-wide">
-              {selectedSection} — Weekly Timetable
+              {selectedSection ? `${selectedSection} — Weekly Timetable` : "Weekly Timetable"}
             </h3>
             <div className="grid grid-cols-5 gap-3">
               {DAYS.map((day) => (
