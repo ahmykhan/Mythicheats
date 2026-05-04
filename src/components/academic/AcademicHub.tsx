@@ -102,16 +102,34 @@ const AcademicHub: React.FC = () => {
         const res = await fetch(DATESHEET_CSV_URL);
         const text = await res.text();
         const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
-        const rows = (parsed.data as any[])
-          .map((r) => ({
-            Day: pick(r, ["Day"]),
-            Date: pick(r, ["Date"]),
-            Time: pick(r, ["Time", "Session", "StartTime"]),
-            CourseCode: pick(r, ["CourseCode", "Course Code", "Code"]).toUpperCase(),
-            Subject: pick(r, ["Subject", "Course", "Course Title", "CourseTitle", "Title"]),
-          }))
-          .filter((r) => r.CourseCode);
-        setDatesheetData(rows);
+        const formattedDatesheet: DatesheetRow[] = [];
+        (parsed.data as any[]).forEach((r) => {
+          const day = pick(r, ["Day"]);
+          const date = pick(r, ["Date"]);
+          const morningCode = pick(r, ["MorningCode"]).toUpperCase();
+          const morningSubject = pick(r, ["MorningSubject"]);
+          const eveningCode = pick(r, ["EveningCode"]).toUpperCase();
+          const eveningSubject = pick(r, ["EveningSubject"]);
+          if (morningCode) {
+            formattedDatesheet.push({
+              Day: day,
+              Date: date,
+              Time: "09:00 - 12:00",
+              CourseCode: morningCode,
+              Subject: morningSubject,
+            });
+          }
+          if (eveningCode) {
+            formattedDatesheet.push({
+              Day: day,
+              Date: date,
+              Time: "1:00 - 4:00",
+              CourseCode: eveningCode,
+              Subject: eveningSubject,
+            });
+          }
+        });
+        setDatesheetData(formattedDatesheet);
       } catch (err: any) {
         console.error("Datesheet fetch failed:", err);
         toast({ title: "Failed to load datesheet", description: err.message, variant: "destructive" });
