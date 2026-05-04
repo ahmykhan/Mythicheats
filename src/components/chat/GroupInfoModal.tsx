@@ -107,6 +107,7 @@ const GroupInfoModal: React.FC<GroupInfoModalProps> = ({
         .eq("id", participantId);
       if (error) throw error;
       toast({ title: "Removed", description: `${username} has been removed.` });
+      window.dispatchEvent(new CustomEvent("rooms-changed"));
       fetchParticipants();
     } catch {
       toast({ title: "Error", description: "Failed to remove member.", variant: "destructive" });
