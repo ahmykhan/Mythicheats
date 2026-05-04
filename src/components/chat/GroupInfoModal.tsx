@@ -107,6 +107,7 @@ const GroupInfoModal: React.FC<GroupInfoModalProps> = ({
         .eq("id", participantId);
       if (error) throw error;
       toast({ title: "Removed", description: `${username} has been removed.` });
+      window.dispatchEvent(new CustomEvent("rooms-changed"));
       fetchParticipants();
     } catch {
       toast({ title: "Error", description: "Failed to remove member.", variant: "destructive" });
@@ -143,10 +144,16 @@ const GroupInfoModal: React.FC<GroupInfoModalProps> = ({
       } else {
         toast({ title: "Added", description: `${username} has been added.` });
         setSearchResults((prev) => prev.filter((u) => u.user_id !== userId));
+        window.dispatchEvent(new CustomEvent("rooms-changed"));
         fetchParticipants();
       }
-    } catch {
-      toast({ title: "Error", description: "Failed to add member.", variant: "destructive" });
+    } catch (err: any) {
+      console.error("Add member failed:", err);
+      toast({
+        title: "Error",
+        description: err?.message || "Failed to add member.",
+        variant: "destructive",
+      });
     }
   };
 

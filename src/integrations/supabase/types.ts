@@ -479,6 +479,10 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      is_room_admin: {
+        Args: { _room_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_room_member: {
         Args: { _room_id: string; _user_id: string }
         Returns: boolean
