@@ -41,7 +41,13 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
       .on("postgres_changes", { event: "*", schema: "public", table: "room_participants" }, () => fetchRooms())
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    const onRoomsChanged = () => fetchRooms();
+    window.addEventListener("rooms-changed", onRoomsChanged);
+
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener("rooms-changed", onRoomsChanged);
+    };
   }, []);
 
   const fetchRooms = async () => {
