@@ -21,6 +21,7 @@ interface TimetableSlot {
   course: string;
   section: string;
   room: string;
+  teacher?: string;
   raw: string;
 }
 
