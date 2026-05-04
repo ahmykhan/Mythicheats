@@ -21,6 +21,7 @@ interface TimetableSlot {
   course: string;
   section: string;
   room: string;
+  teacher?: string;
   raw: string;
 }
 
@@ -164,6 +165,47 @@ const AcademicHub: React.FC<AcademicHubProps> = ({ isAdmin = false }) => {
   const datesheetRef = useRef<HTMLDivElement>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const timetableCsvInputRef = useRef<HTMLInputElement>(null);
+
+  const handleTimetableCsv = (file: File) => {
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        const rows = (results.data as any[]).filter(Boolean);
+        const slots: TimetableSlot[] = rows
+          .map((r) => {
+            const day = String(r.Day ?? "").trim();
+            const room = String(r.Room ?? "").trim();
+            const time = String(r.StartTime ?? "").trim();
+            const course = String(r.Course ?? "").trim();
+            const section = String(r.Section ?? "").trim().toUpperCase();
+            const teacher = String(r.Teacher ?? "").trim();
+            if (!day || !section || !time) return null;
+            return {
+              day,
+              time,
+              course,
+              section,
+              room,
+              teacher,
+              raw: `${course} (${section})${teacher ? `: ${teacher}` : ""}`,
+            } as TimetableSlot;
+          })
+          .filter((s): s is TimetableSlot => s !== null);
+        setTimetableData(slots);
+        toast({
+          title: "Timetable loaded",
+          description: `${file.name}: ${slots.length} class slots loaded.`,
+        });
+        if (isAdmin) persist("timetable", slots);
+      },
+      error: (err) => {
+        toast({ title: "CSV parse error", description: err.message, variant: "destructive" });
+      },
+    });
+  };
+
 
   // Load shared campus_master_data on mount so all students see admin-uploaded data
   useEffect(() => {
@@ -443,14 +485,35 @@ const AcademicHub: React.FC<AcademicHubProps> = ({ isAdmin = false }) => {
                 </SelectContent>
               </Select>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => downloadPNG(timetableRef, `timetable-${selectedSection}`)}
-              className="border-purple-500/40"
-            >
-              <Download className="h-4 w-4 mr-2" /> Download PNG
-            </Button>
+            <div className="flex items-center gap-2">
+              <input
+                ref={timetableCsvInputRef}
+                type="file"
+                accept=".csv"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleTimetableCsv(f);
+                  e.target.value = "";
+                }}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => timetableCsvInputRef.current?.click()}
+                className="border-purple-500/40"
+              >
+                <Upload className="h-4 w-4 mr-2" /> Upload Timetable CSV
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => downloadPNG(timetableRef, `timetable-${selectedSection}`)}
+                className="border-purple-500/40"
+              >
+                <Download className="h-4 w-4 mr-2" /> Download PNG
+              </Button>
+            </div>
           </div>
 
           <div
@@ -483,6 +546,9 @@ const AcademicHub: React.FC<AcademicHubProps> = ({ isAdmin = false }) => {
                           <div className="text-foreground">{slot.course}</div>
                           {slot.room && (
                             <div className="text-amber-200/80 text-[10px]">Room {slot.room}</div>
+                          )}
+                          {slot.teacher && (
+                            <div className="text-purple-200/70 text-[10px]">{slot.teacher}</div>
                           )}
                           {slot.section && (
                             <div className="text-muted-foreground text-[10px]">
