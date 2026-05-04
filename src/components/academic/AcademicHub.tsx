@@ -485,14 +485,35 @@ const AcademicHub: React.FC<AcademicHubProps> = ({ isAdmin = false }) => {
                 </SelectContent>
               </Select>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => downloadPNG(timetableRef, `timetable-${selectedSection}`)}
-              className="border-purple-500/40"
-            >
-              <Download className="h-4 w-4 mr-2" /> Download PNG
-            </Button>
+            <div className="flex items-center gap-2">
+              <input
+                ref={timetableCsvInputRef}
+                type="file"
+                accept=".csv"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleTimetableCsv(f);
+                  e.target.value = "";
+                }}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => timetableCsvInputRef.current?.click()}
+                className="border-purple-500/40"
+              >
+                <Upload className="h-4 w-4 mr-2" /> Upload Timetable CSV
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => downloadPNG(timetableRef, `timetable-${selectedSection}`)}
+                className="border-purple-500/40"
+              >
+                <Download className="h-4 w-4 mr-2" /> Download PNG
+              </Button>
+            </div>
           </div>
 
           <div
