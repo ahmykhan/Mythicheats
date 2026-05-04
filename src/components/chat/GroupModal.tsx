@@ -45,6 +45,9 @@ const GroupModal: React.FC<GroupModalProps> = ({ open, onOpenChange, defaultTab 
       // Add creator as participant with admin role
       await supabase.from("room_participants").insert({ room_id: room.id, user_id: user.id, role: "admin" });
 
+      // Instant UI: tell the sidebar to refetch immediately
+      window.dispatchEvent(new CustomEvent("rooms-changed"));
+
       toast({
         title: "Group Created!",
         description: `Share this join code: ${code}`,
