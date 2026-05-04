@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +24,12 @@ import {
   MapPin,
   PackageCheck,
   ShieldCheck,
+  Inbox,
+  XCircle,
+  HelpCircle,
+  MessageCircle,
 } from "lucide-react";
+import { startDM } from "@/components/chat/NewDMSearch";
 
 interface LostFoundItem {
   id: string;
@@ -33,7 +39,19 @@ interface LostFoundItem {
   description: string | null;
   image_url: string | null;
   status: string;
+  verification_question: string | null;
   created_at: string;
+}
+
+interface ClaimRow {
+  id: string;
+  item_id: string;
+  claimer_id: string;
+  proof_message: string;
+  verification_answer: string | null;
+  status: string;
+  created_at: string;
+  item?: LostFoundItem;
 }
 
 interface LostAndFoundProps {
@@ -43,7 +61,7 @@ interface LostAndFoundProps {
   ) => void;
 }
 
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
 const LostAndFound: React.FC<LostAndFoundProps> = ({ onNavigateToDM }) => {
   const [items, setItems] = useState<LostFoundItem[]>([]);
@@ -54,23 +72,23 @@ const LostAndFound: React.FC<LostAndFoundProps> = ({ onNavigateToDM }) => {
   const [usernames, setUsernames] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
-  // Modal state
+  // Post modal
   const [modalOpen, setModalOpen] = useState(false);
-  const [itemType, setItemType] = useState<"lost" | "found">("lost");
+  const [itemType, setItemType] = useState<"lost" | "found">("found");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [verificationQuestion, setVerificationQuestion] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Drop-off modal (I found this!)
-  const [dropoffItem, setDropoffItem] = useState<LostFoundItem | null>(null);
-  const [dropoffRefId, setDropoffRefId] = useState<string>("");
-  const [dropoffSubmitting, setDropoffSubmitting] = useState(false);
-
-  // Claim modal (That is mine!)
+  // Claim modal
   const [claimItem, setClaimItem] = useState<LostFoundItem | null>(null);
-  const [claimProof, setClaimProof] = useState("");
+  const [claimAnswer, setClaimAnswer] = useState("");
   const [claimSubmitting, setClaimSubmitting] = useState(false);
+
+  // Approval dashboard
+  const [incomingClaims, setIncomingClaims] = useState<ClaimRow[]>([]);
+  const [processingClaim, setProcessingClaim] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -83,33 +101,65 @@ const LostAndFound: React.FC<LostAndFoundProps> = ({ onNavigateToDM }) => {
     let query = supabase
       .from("lost_found_items")
       .select("*")
-      .eq("status", "open")
+      .in("status", ["open", "pending"])
       .order("created_at", { ascending: false });
-
     if (filter !== "all") query = query.eq("item_type", filter);
 
     const { data, error } = await query;
     if (error) {
       toast({ title: "Error loading items", description: error.message, variant: "destructive" });
     } else {
-      setItems(data || []);
-      // Fetch usernames for all unique user_ids
+      setItems((data || []) as LostFoundItem[]);
       const userIds = [...new Set((data || []).map((i) => i.user_id))];
       if (userIds.length > 0) {
-        const { data: names } = await supabase.rpc("get_usernames_by_ids", {
-          _user_ids: userIds,
-        });
+        const { data: names } = await supabase.rpc("get_usernames_by_ids", { _user_ids: userIds });
         const map: Record<string, string> = {};
-        (names || []).forEach((n) => (map[n.user_id] = n.username));
+        (names || []).forEach((n: any) => (map[n.user_id] = n.username));
         setUsernames(map);
       }
     }
     setLoading(false);
   }, [filter, toast]);
 
+  const fetchIncomingClaims = useCallback(async () => {
+    if (!currentUserId) return;
+    // Get items I posted
+    const { data: myItems } = await supabase
+      .from("lost_found_items")
+      .select("*")
+      .eq("user_id", currentUserId);
+    const itemIds = (myItems || []).map((i) => i.id);
+    if (itemIds.length === 0) {
+      setIncomingClaims([]);
+      return;
+    }
+    const { data: claims } = await supabase
+      .from("lost_found_claims")
+      .select("*")
+      .in("item_id", itemIds)
+      .order("created_at", { ascending: false });
+
+    const claimerIds = [...new Set((claims || []).map((c) => c.claimer_id))];
+    if (claimerIds.length > 0) {
+      const { data: names } = await supabase.rpc("get_usernames_by_ids", { _user_ids: claimerIds });
+      const map: Record<string, string> = { ...usernames };
+      (names || []).forEach((n: any) => (map[n.user_id] = n.username));
+      setUsernames(map);
+    }
+
+    const itemMap = new Map((myItems || []).map((i: any) => [i.id, i]));
+    setIncomingClaims(
+      ((claims || []) as any[]).map((c) => ({ ...c, item: itemMap.get(c.item_id) }))
+    );
+  }, [currentUserId]); // eslint-disable-line
+
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
+
+  useEffect(() => {
+    fetchIncomingClaims();
+  }, [fetchIncomingClaims]);
 
   const filteredItems = items.filter((item) => {
     if (!searchQuery.trim()) return true;
@@ -136,6 +186,14 @@ const LostAndFound: React.FC<LostAndFoundProps> = ({ onNavigateToDM }) => {
       toast({ title: "Title required", variant: "destructive" });
       return;
     }
+    if (!verificationQuestion.trim() || verificationQuestion.trim().length < 8) {
+      toast({
+        title: "Security question required",
+        description: "Add a question only the true owner could answer.",
+        variant: "destructive",
+      });
+      return;
+    }
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
@@ -150,10 +208,7 @@ const LostAndFound: React.FC<LostAndFoundProps> = ({ onNavigateToDM }) => {
           .from("lost-and-found")
           .upload(path, imageFile);
         if (uploadError) throw uploadError;
-
-        const { data: urlData } = supabase.storage
-          .from("lost-and-found")
-          .getPublicUrl(path);
+        const { data: urlData } = supabase.storage.from("lost-and-found").getPublicUrl(path);
         imageUrl = urlData.publicUrl;
       }
 
@@ -163,14 +218,15 @@ const LostAndFound: React.FC<LostAndFoundProps> = ({ onNavigateToDM }) => {
         title: title.trim(),
         description: description.trim(),
         image_url: imageUrl,
+        verification_question: verificationQuestion.trim(),
       });
-
       if (error) throw error;
 
-      toast({ title: "Item reported!" });
+      toast({ title: "Item posted!" });
       setModalOpen(false);
       setTitle("");
       setDescription("");
+      setVerificationQuestion("");
       setImageFile(null);
       fetchItems();
     } catch (err: any) {
@@ -193,56 +249,10 @@ const LostAndFound: React.FC<LostAndFoundProps> = ({ onNavigateToDM }) => {
     }
   };
 
-  const openDropoffModal = (item: LostFoundItem) => {
-    const refId = Math.floor(1000 + Math.random() * 9000).toString();
-    setDropoffRefId(refId);
-    setDropoffItem(item);
-  };
-
-  const confirmDropoff = async () => {
-    if (!dropoffItem || !currentUserId) return;
-    setDropoffSubmitting(true);
-    try {
-      const { error: updErr } = await supabase
-        .from("lost_found_items")
-        .update({
-          status: "at_admin_desk",
-          reference_id: dropoffRefId,
-          dropped_by: currentUserId,
-        })
-        .eq("id", dropoffItem.id);
-      if (updErr) throw updErr;
-
-      const { error: notifErr } = await supabase.from("user_notifications").insert({
-        user_id: dropoffItem.user_id,
-        title: "Your item has been found!",
-        description: `"${dropoffItem.title}" was dropped off at the Campus Admin Desk. Reference ID: ${dropoffRefId}. Please collect it from the admin office.`,
-        link: "/lost-found",
-      });
-      if (notifErr) throw notifErr;
-
-      toast({
-        title: "Drop-off confirmed!",
-        description: `Reference ID ${dropoffRefId} recorded. The owner has been notified.`,
-      });
-      setDropoffItem(null);
-      setDropoffRefId("");
-      fetchItems();
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    } finally {
-      setDropoffSubmitting(false);
-    }
-  };
-
   const submitClaim = async () => {
     if (!claimItem || !currentUserId) return;
-    if (claimProof.trim().length < 10) {
-      toast({
-        title: "More detail needed",
-        description: "Please describe a unique detail (at least 10 characters).",
-        variant: "destructive",
-      });
+    if (claimAnswer.trim().length < 2) {
+      toast({ title: "Please answer the question", variant: "destructive" });
       return;
     }
     setClaimSubmitting(true);
@@ -250,27 +260,97 @@ const LostAndFound: React.FC<LostAndFoundProps> = ({ onNavigateToDM }) => {
       const { error: claimErr } = await supabase.from("lost_found_claims").insert({
         item_id: claimItem.id,
         claimer_id: currentUserId,
-        proof_message: claimProof.trim(),
+        proof_message: claimAnswer.trim(),
+        verification_answer: claimAnswer.trim(),
       });
       if (claimErr) throw claimErr;
 
-      const claimerName = "A user";
       await supabase.from("user_notifications").insert({
         user_id: claimItem.user_id,
         title: "New ownership claim",
-        description: `${claimerName} submitted a claim for "${claimItem.title}". Review their proof in the Lost & Found.`,
+        description: `Someone submitted an answer for "${claimItem.title}". Review it in Lost & Found → Claims.`,
         link: "/lost-found",
       });
 
-      toast({ title: "Claim sent to the finder for verification!" });
+      toast({ title: "Claim submitted for review!" });
       setClaimItem(null);
-      setClaimProof("");
+      setClaimAnswer("");
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
       setClaimSubmitting(false);
     }
   };
+
+  const approveClaim = async (claim: ClaimRow) => {
+    if (!claim.item || !currentUserId) return;
+    setProcessingClaim(claim.id);
+    try {
+      // 1. Approve claim
+      const { error: cErr } = await supabase
+        .from("lost_found_claims")
+        .update({ status: "approved" })
+        .eq("id", claim.id);
+      if (cErr) throw cErr;
+
+      // 2. Set item to pending
+      await supabase
+        .from("lost_found_items")
+        .update({ status: "pending" })
+        .eq("id", claim.item.id);
+
+      // 3. Create DM between finder and claimant
+      const claimantName = usernames[claim.claimer_id] || "claimant";
+      const room = await startDM(claim.claimer_id, claimantName);
+
+      // 4. Notify claimant
+      await supabase.from("user_notifications").insert({
+        user_id: claim.claimer_id,
+        title: "Your claim was approved!",
+        description: `Your claim on "${claim.item.title}" was approved. Chat opened to arrange the return.`,
+        link: "/chat",
+      });
+
+      toast({ title: "Approved!", description: "Private chat opened with the claimant." });
+      fetchIncomingClaims();
+      fetchItems();
+
+      if (room && onNavigateToDM) {
+        onNavigateToDM(
+          room,
+          `Hi! I approved your claim for "${claim.item.title}". Let's arrange the return.`
+        );
+      }
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setProcessingClaim(null);
+    }
+  };
+
+  const rejectClaim = async (claim: ClaimRow) => {
+    setProcessingClaim(claim.id);
+    try {
+      const { error } = await supabase
+        .from("lost_found_claims")
+        .update({ status: "rejected" })
+        .eq("id", claim.id);
+      if (error) throw error;
+      await supabase.from("user_notifications").insert({
+        user_id: claim.claimer_id,
+        title: "Claim rejected",
+        description: `Your claim on "${claim.item?.title || "an item"}" was rejected by the finder.`,
+      });
+      toast({ title: "Claim rejected" });
+      fetchIncomingClaims();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setProcessingClaim(null);
+    }
+  };
+
+  const pendingClaims = incomingClaims.filter((c) => c.status === "pending");
 
   return (
     <div className="space-y-4">
@@ -283,15 +363,14 @@ const LostAndFound: React.FC<LostAndFoundProps> = ({ onNavigateToDM }) => {
         <Dialog open={modalOpen} onOpenChange={setModalOpen}>
           <DialogTrigger asChild>
             <Button size="sm">
-              <Plus className="h-4 w-4 mr-1" /> Report Item
+              <Plus className="h-4 w-4 mr-1" /> Post Item
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md backdrop-blur-xl bg-background/90">
             <DialogHeader>
-              <DialogTitle>Report an Item</DialogTitle>
+              <DialogTitle>Post an Item</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              {/* Type Toggle */}
               <div className="flex gap-2">
                 <Button
                   variant={itemType === "lost" ? "default" : "outline"}
@@ -311,190 +390,310 @@ const LostAndFound: React.FC<LostAndFoundProps> = ({ onNavigateToDM }) => {
                 </Button>
               </div>
               <Input
-                placeholder="Item title"
+                placeholder="Item title (e.g., Black iPhone 13)"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 maxLength={100}
               />
               <Textarea
-                placeholder="Description (location, details...)"
+                placeholder="Public description (location, generic details...)"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 maxLength={500}
-                rows={3}
+                rows={2}
               />
-              <div>
-                <label className="flex items-center gap-2 cursor-pointer border border-dashed border-muted-foreground/30 rounded-md p-3 hover:bg-muted/50 transition-colors">
-                  <ImagePlus className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">
-                    {imageFile ? imageFile.name : "Upload image (max 2MB)"}
-                  </span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageChange}
-                  />
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold flex items-center gap-1.5 text-foreground">
+                  <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                  Security Question <span className="text-destructive">*</span>
                 </label>
+                <Textarea
+                  placeholder="e.g., What is the lock screen wallpaper? What's engraved on the back?"
+                  value={verificationQuestion}
+                  onChange={(e) => setVerificationQuestion(e.target.value)}
+                  maxLength={250}
+                  rows={2}
+                  className="border-primary/30"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Only the true owner should be able to answer this. Don't reveal the answer in the description.
+                </p>
               </div>
+              <label className="flex items-center gap-2 cursor-pointer border border-dashed border-muted-foreground/30 rounded-md p-3 hover:bg-muted/50 transition-colors">
+                <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  {imageFile ? imageFile.name : "Upload image (max 2MB)"}
+                </span>
+                <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+              </label>
               <Button onClick={handleSubmit} disabled={submitting} className="w-full">
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-                Submit Report
+                {submitting && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+                Post Item
               </Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Search & Filters */}
-      <div className="flex flex-col sm:flex-row gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search items..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8"
-          />
-        </div>
-        <div className="flex gap-1">
-          {(["all", "lost", "found"] as const).map((f) => (
-            <Button
-              key={f}
-              variant={filter === f ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter(f)}
-              className="capitalize"
-            >
-              {f}
-            </Button>
-          ))}
-        </div>
-      </div>
+      <Tabs defaultValue="browse" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-sm">
+          <TabsTrigger value="browse">
+            <PackageSearch className="h-4 w-4 mr-1.5" /> Browse
+          </TabsTrigger>
+          <TabsTrigger value="claims" className="relative">
+            <Inbox className="h-4 w-4 mr-1.5" /> My Claims
+            {pendingClaims.length > 0 && (
+              <Badge className="ml-2 h-5 min-w-5 px-1.5 text-[10px]">{pendingClaims.length}</Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Feed */}
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      ) : filteredItems.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <PackageSearch className="h-10 w-10 mx-auto mb-2 opacity-50" />
-          <p>No items found</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredItems.map((item) => (
-            <Card key={item.id} className="overflow-hidden">
-              {item.image_url && (
-                <div className="aspect-video bg-muted overflow-hidden">
-                  <img
-                    src={item.image_url}
-                    alt={item.title}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
-              )}
-              <CardContent className={item.image_url ? "p-4" : "p-4"}>
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <h3 className="font-semibold text-sm leading-tight">{item.title}</h3>
-                  <Badge variant={item.item_type === "lost" ? "destructive" : "default"} className="shrink-0 text-xs">
-                    {item.item_type === "lost" ? "Lost" : "Found"}
-                  </Badge>
-                </div>
-                {item.description && (
-                  <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{item.description}</p>
-                )}
-                <p className="text-xs text-muted-foreground mb-3">
-                  by {usernames[item.user_id] || "Unknown"} · {new Date(item.created_at).toLocaleDateString()}
-                </p>
-                <div className="flex gap-2">
-                  {item.user_id === currentUserId ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full text-xs"
-                      onClick={() => handleResolve(item.id)}
-                    >
-                      <CheckCircle className="h-3 w-3 mr-1" /> Mark as Resolved
-                    </Button>
-                  ) : item.item_type === "lost" ? (
-                    <Button
-                      size="sm"
-                      className="w-full text-xs"
-                      onClick={() => openDropoffModal(item)}
-                    >
-                      <PackageCheck className="h-3 w-3 mr-1" />
-                      I found this!
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      className="w-full text-xs"
-                      onClick={() => setClaimItem(item)}
-                    >
-                      <ShieldCheck className="h-3 w-3 mr-1" />
-                      That is mine!
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Drop-off Modal */}
-      <Dialog open={!!dropoffItem} onOpenChange={(o) => !o && setDropoffItem(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <PackageCheck className="h-5 w-5" /> Thank you!
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 text-center">
-            <p className="text-sm text-muted-foreground">
-              Please drop this item off at the <span className="font-semibold text-foreground">Campus Admin Desk</span>.
-              Show this Reference ID when handing it over.
-            </p>
-            <div className="rounded-lg border-2 border-dashed border-primary/40 bg-primary/5 py-6">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Reference ID</p>
-              <p className="text-5xl font-bold tracking-widest text-primary">{dropoffRefId}</p>
+        <TabsContent value="browse" className="space-y-4 mt-4">
+          {/* Search & filters */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search items..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8"
+              />
             </div>
-            <p className="text-xs text-muted-foreground">
-              The owner of <span className="font-medium text-foreground">"{dropoffItem?.title}"</span> will be notified once you confirm.
-            </p>
-            <Button onClick={confirmDropoff} disabled={dropoffSubmitting} className="w-full">
-              {dropoffSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
-              Confirm Drop-off
-            </Button>
+            <div className="flex gap-1">
+              {(["all", "lost", "found"] as const).map((f) => (
+                <Button
+                  key={f}
+                  variant={filter === f ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFilter(f)}
+                  className="capitalize"
+                >
+                  {f}
+                </Button>
+              ))}
+            </div>
           </div>
-        </DialogContent>
-      </Dialog>
+
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : filteredItems.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <PackageSearch className="h-10 w-10 mx-auto mb-2 opacity-50" />
+              <p>No items found</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredItems.map((item) => (
+                <Card
+                  key={item.id}
+                  className="overflow-hidden backdrop-blur-md bg-card/70 border-border/50 hover:border-primary/40 transition-all hover:shadow-lg"
+                >
+                  {item.image_url && (
+                    <div className="aspect-video bg-muted overflow-hidden">
+                      <img
+                        src={item.image_url}
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <h3 className="font-semibold text-sm leading-tight">{item.title}</h3>
+                      <Badge
+                        variant={item.item_type === "lost" ? "destructive" : "default"}
+                        className="shrink-0 text-xs"
+                      >
+                        {item.item_type === "lost" ? "Lost" : "Found"}
+                      </Badge>
+                    </div>
+                    {item.description && (
+                      <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{item.description}</p>
+                    )}
+                    {item.verification_question && (
+                      <div className="flex items-start gap-1.5 text-[11px] text-primary/80 mb-3 bg-primary/5 rounded-md p-2 border border-primary/10">
+                        <ShieldCheck className="h-3 w-3 mt-0.5 shrink-0" />
+                        <span>Verification required to claim</span>
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground mb-3">
+                      by {usernames[item.user_id] || "Unknown"} ·{" "}
+                      {new Date(item.created_at).toLocaleDateString()}
+                      {item.status === "pending" && (
+                        <Badge variant="outline" className="ml-2 text-[10px]">
+                          Pending return
+                        </Badge>
+                      )}
+                    </p>
+                    <div className="flex gap-2">
+                      {item.user_id === currentUserId ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full text-xs"
+                          onClick={() => handleResolve(item.id)}
+                        >
+                          <CheckCircle className="h-3 w-3 mr-1" /> Mark Resolved
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          className="w-full text-xs"
+                          onClick={() => {
+                            setClaimAnswer("");
+                            setClaimItem(item);
+                          }}
+                          disabled={item.status !== "open"}
+                        >
+                          <ShieldCheck className="h-3 w-3 mr-1" />
+                          Claim
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="claims" className="mt-4">
+          {incomingClaims.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Inbox className="h-10 w-10 mx-auto mb-2 opacity-50" />
+              <p>No claims on your items yet</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {incomingClaims.map((claim) => (
+                <Card
+                  key={claim.id}
+                  className="backdrop-blur-md bg-card/70 border-border/50"
+                >
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h4 className="font-semibold text-sm">{claim.item?.title}</h4>
+                        <p className="text-xs text-muted-foreground">
+                          Claim from{" "}
+                          <span className="font-medium text-foreground">
+                            {usernames[claim.claimer_id] || "Unknown"}
+                          </span>{" "}
+                          · {new Date(claim.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <Badge
+                        variant={
+                          claim.status === "approved"
+                            ? "default"
+                            : claim.status === "rejected"
+                            ? "destructive"
+                            : "secondary"
+                        }
+                        className="text-[10px] capitalize"
+                      >
+                        {claim.status}
+                      </Badge>
+                    </div>
+
+                    {claim.item?.verification_question && (
+                      <div className="bg-muted/40 rounded-md p-3 space-y-2 border border-border/50">
+                        <div className="flex items-start gap-1.5 text-xs">
+                          <HelpCircle className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
+                          <div>
+                            <p className="font-medium text-foreground">Your question:</p>
+                            <p className="text-muted-foreground italic">
+                              "{claim.item.verification_question}"
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-1.5 text-xs pt-2 border-t border-border/50">
+                          <ShieldCheck className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
+                          <div>
+                            <p className="font-medium text-foreground">Their answer:</p>
+                            <p className="text-foreground/90 whitespace-pre-wrap">
+                              {claim.verification_answer || claim.proof_message}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {claim.status === "pending" && (
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => approveClaim(claim)}
+                          disabled={processingClaim === claim.id}
+                        >
+                          {processingClaim === claim.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                          ) : (
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                          )}
+                          Approve & Open Chat
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => rejectClaim(claim)}
+                          disabled={processingClaim === claim.id}
+                        >
+                          <XCircle className="h-3 w-3 mr-1" /> Reject
+                        </Button>
+                      </div>
+                    )}
+                    {claim.status === "approved" && (
+                      <div className="flex items-center gap-1.5 text-xs text-primary">
+                        <MessageCircle className="h-3 w-3" /> Chat opened with claimant
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Claim Modal */}
       <Dialog open={!!claimItem} onOpenChange={(o) => !o && setClaimItem(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md backdrop-blur-xl bg-background/90">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <ShieldCheck className="h-5 w-5" /> Verify Ownership
+              <ShieldCheck className="h-5 w-5 text-primary" /> Verify Ownership
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              To claim <span className="font-medium text-foreground">"{claimItem?.title}"</span>, describe a unique detail
-              about this item to prove it belongs to you (e.g., a scratch, sticker, contents, serial number).
+              Answer the finder's security question to claim{" "}
+              <span className="font-medium text-foreground">"{claimItem?.title}"</span>.
             </p>
+            {claimItem?.verification_question && (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+                <div className="flex items-start gap-2">
+                  <HelpCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                  <p className="text-sm font-medium text-foreground">
+                    {claimItem.verification_question}
+                  </p>
+                </div>
+              </div>
+            )}
             <Textarea
-              placeholder="Describe a unique detail about this item..."
-              value={claimProof}
-              onChange={(e) => setClaimProof(e.target.value)}
+              placeholder="Type your answer..."
+              value={claimAnswer}
+              onChange={(e) => setClaimAnswer(e.target.value)}
               maxLength={500}
               rows={4}
+              autoFocus
             />
-            <p className="text-xs text-muted-foreground">
-              {claimProof.length}/500 characters
+            <p className="text-[11px] text-muted-foreground">
+              The finder will review your answer privately. They never see your guess until you submit.
             </p>
             <Button onClick={submitClaim} disabled={claimSubmitting} className="w-full">
               {claimSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
