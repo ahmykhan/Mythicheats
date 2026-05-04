@@ -174,6 +174,7 @@ export type Database = {
           item_id: string
           proof_message: string
           status: string
+          verification_answer: string | null
         }
         Insert: {
           claimer_id: string
@@ -182,6 +183,7 @@ export type Database = {
           item_id: string
           proof_message: string
           status?: string
+          verification_answer?: string | null
         }
         Update: {
           claimer_id?: string
@@ -190,6 +192,7 @@ export type Database = {
           item_id?: string
           proof_message?: string
           status?: string
+          verification_answer?: string | null
         }
         Relationships: [
           {
@@ -213,6 +216,7 @@ export type Database = {
           status: string
           title: string
           user_id: string
+          verification_question: string | null
         }
         Insert: {
           created_at?: string
@@ -225,6 +229,7 @@ export type Database = {
           status?: string
           title: string
           user_id: string
+          verification_question?: string | null
         }
         Update: {
           created_at?: string
@@ -237,6 +242,7 @@ export type Database = {
           status?: string
           title?: string
           user_id?: string
+          verification_question?: string | null
         }
         Relationships: []
       }
