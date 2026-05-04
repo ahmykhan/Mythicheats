@@ -165,6 +165,47 @@ const AcademicHub: React.FC<AcademicHubProps> = ({ isAdmin = false }) => {
   const datesheetRef = useRef<HTMLDivElement>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const timetableCsvInputRef = useRef<HTMLInputElement>(null);
+
+  const handleTimetableCsv = (file: File) => {
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        const rows = (results.data as any[]).filter(Boolean);
+        const slots: TimetableSlot[] = rows
+          .map((r) => {
+            const day = String(r.Day ?? "").trim();
+            const room = String(r.Room ?? "").trim();
+            const time = String(r.StartTime ?? "").trim();
+            const course = String(r.Course ?? "").trim();
+            const section = String(r.Section ?? "").trim().toUpperCase();
+            const teacher = String(r.Teacher ?? "").trim();
+            if (!day || !section || !time) return null;
+            return {
+              day,
+              time,
+              course,
+              section,
+              room,
+              teacher,
+              raw: `${course} (${section})${teacher ? `: ${teacher}` : ""}`,
+            } as TimetableSlot;
+          })
+          .filter((s): s is TimetableSlot => s !== null);
+        setTimetableData(slots);
+        toast({
+          title: "Timetable loaded",
+          description: `${file.name}: ${slots.length} class slots loaded.`,
+        });
+        if (isAdmin) persist("timetable", slots);
+      },
+      error: (err) => {
+        toast({ title: "CSV parse error", description: err.message, variant: "destructive" });
+      },
+    });
+  };
+
 
   // Load shared campus_master_data on mount so all students see admin-uploaded data
   useEffect(() => {
