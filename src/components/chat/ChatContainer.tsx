@@ -58,6 +58,68 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ currentUsername, isAdmin 
     return () => window.removeEventListener("navigate-to-dm", handler);
   }, []);
 
+  // Request notification permission once on mount
+  useEffect(() => {
+    if (typeof Notification !== "undefined" && Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
+  }, []);
+
+  // Cross-room push notifications: notify when tab is hidden and message is in a room the user belongs to.
+  useEffect(() => {
+    let userId: string | null = null;
+    const memberRoomIds = new Set<string>();
+
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      userId = user.id;
+
+      const { data: parts } = await supabase
+        .from("room_participants")
+        .select("room_id")
+        .eq("user_id", user.id);
+      (parts || []).forEach((p) => memberRoomIds.add(p.room_id));
+
+      const { data: globals } = await supabase
+        .from("chat_rooms")
+        .select("id")
+        .eq("type", "global");
+      (globals || []).forEach((g) => memberRoomIds.add(g.id));
+    })();
+
+    const channel = supabase
+      .channel("global-message-notifications")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "chat_messages" },
+        (payload) => {
+          const msg = payload.new as { user_id: string; username: string; message: string; room_id: string | null };
+          if (!userId || msg.user_id === userId) return;
+          if (!msg.room_id || !memberRoomIds.has(msg.room_id)) return;
+          if (typeof document !== "undefined" && document.visibilityState !== "hidden") return;
+          if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+          try {
+            new Notification(`New message from ${msg.username}`, {
+              body: msg.message,
+              icon: "/placeholder.svg",
+            });
+          } catch {}
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "room_participants" },
+        (payload) => {
+          const p = payload.new as { user_id: string; room_id: string };
+          if (userId && p.user_id === userId) memberRoomIds.add(p.room_id);
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
   const showSidebar = !isMobile || !selectedRoom;
   const showChat = !isMobile || !!selectedRoom;
 
