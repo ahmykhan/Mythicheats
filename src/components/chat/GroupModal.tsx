@@ -94,6 +94,7 @@ const GroupModal: React.FC<GroupModalProps> = ({ open, onOpenChange, defaultTab 
         toast({ title: "Joined!", description: `You joined "${room.name}"` });
       }
 
+      window.dispatchEvent(new CustomEvent("rooms-changed"));
       setJoinCode("");
       onOpenChange(false);
     } catch (error: any) {
